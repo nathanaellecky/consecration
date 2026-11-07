@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Consecration">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="favicon.png">
+<meta name="theme-color" content="#fbfaf6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141210" media="(prefers-color-scheme: dark)">
+<title>Total Consecration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+/* Layout: a single printed-page column (~60ch), black ink with rubric red for titles and versicles; no boxes. */
+:root {
+  --paper: #fbfaf6;
+  --ink: #1d1b18;
+  --soft: #6f6a62;
+  --rule: #d9d4ca;
+  --red: #a4261c;
+  --serif: "EB Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --scale: 1;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #141210;
+    --ink: #e9e4da;
+    --soft: #9c958a;
+    --rule: #34302a;
+    --red: #dc6a5c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #141210;
+  --ink: #e9e4da;
+  --soft: #9c958a;
+  --rule: #34302a;
+  --red: #dc6a5c;
+  color-scheme: dark;
+}
+
+/* the reader's own choice in Setup overrides the system setting */
+:root[data-mode="light"] {
+  --paper: #fbfaf6;
+  --ink: #1d1b18;
+  --soft: #6f6a62;
+  --rule: #d9d4ca;
+  --red: #a4261c;
+  color-scheme: light;
+}
+:root[data-mode="dark"] {
+  --paper: #141210;
+  --ink: #e9e4da;
+  --soft: #9c958a;
+  --rule: #34302a;
+  --red: #dc6a5c;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: calc(19px * var(--scale));
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+  font-variant-numeric: oldstyle-nums;
+}
+button, input, select { font: inherit; color: inherit; }
+a { color: inherit; }
+:focus-visible { outline: 1px solid var(--red); outline-offset: 3px; }
+
+main {
+  max-width: 34em; margin: 0 auto;
+  padding: calc(env(safe-area-inset-top) + 40px) max(22px, env(safe-area-inset-right)) calc(96px + env(safe-area-inset-bottom)) max(22px, env(safe-area-inset-left));
+}
+
+.sc { font-variant: small-caps; letter-spacing: .08em; text-transform: lowercase; }
+.red { color: var(--red); }
+.soft { color: var(--soft); }
+.it { font-style: italic; }
+
+/* page head */
+.head { text-align: center; margin-bottom: 2.2em; }
+.head .kicker { color: var(--red); font-size: .82em; }
+.head h1 { font-weight: 400; font-size: 2.4em; line-height: 1.1; margin: .1em 0 .25em; text-wrap: balance; }
+.head .rule { width: 3.5em; height: 1px; background: var(--rule); margin: .7em auto .8em; }
+.head p { margin: 0; color: var(--soft); font-style: italic; font-size: .92em; }
+
+h2 { font-weight: 400; color: var(--red); font-size: .9em; margin: 2.4em 0 .8em; text-align: center; }
+
+/* reading */
+.reading p { margin: 0 0 .9em; hyphens: auto; -webkit-hyphens: auto; }
+.reading .src { color: var(--red); font-size: .9em; margin: 2em 0 .6em; text-align: center; font-variant: small-caps; letter-spacing: .05em; }
+.reading .src:first-child { margin-top: 0; }
+.reading .sub { font-style: italic; text-align: center; margin: -.2em 0 1em; }
+
+/* prayers */
+.plist { display: flex; flex-direction: column; gap: 6px; }
+.pitem { border: 1px solid var(--rule); border-radius: 4px; transition: background-color .25s, border-color .25s; }
+.pitem[data-said="true"] { background: color-mix(in srgb, var(--red) 9%, var(--paper)); border-color: color-mix(in srgb, var(--red) 35%, var(--paper)); }
+.pname { width: 100%; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; text-align: left; background: none; border: 0; padding: .6em .8em; cursor: pointer; font-size: 1em; }
+.pname .ico { color: var(--red); font-size: .9em; font-style: italic; }
+.pitem[data-said="true"] .pname { color: var(--red); }
+.pbody { display: none; padding: .2em .8em 1.2em; }
+.pitem.open .pbody { display: block; }
+.amen { display: block; margin: 1.6em auto 0; background: none; border: 1px solid var(--red); border-radius: 3px; color: var(--red); padding: .35em 1.4em; cursor: pointer; font-size: .9em; font-variant: small-caps; letter-spacing: .08em; text-transform: lowercase; }
+.pitem[data-said="true"] .amen { border-color: transparent; text-decoration: underline; text-underline-offset: 3px; }
+
+.prayer .st { margin: 0 0 1em; }
+.prayer .st:last-child { margin-bottom: 0; }
+.prayer .ln { display: block; }
+.prayer.hymn .ln { padding-left: 1.2em; text-indent: -1.2em; }
+.prayer .resp { font-style: italic; }
+.prayer .vr { color: var(--red); margin-right: .3em; }
+.prayer .note { font-style: italic; color: var(--soft); font-size: .92em; }
+.prayer h4 { font-weight: 400; color: var(--red); font-variant: small-caps; letter-spacing: .05em; margin: 1.4em 0 .3em; font-size: .95em; }
+.prayer ol { margin: 0 0 1em; padding-left: 1.4em; }
+
+/* actions */
+.mark { display: block; margin: 2.4em auto 0; background: none; border: 0; border-bottom: 1px solid var(--red); padding: 0 0 2px; color: var(--red); cursor: pointer; font-size: .9em; font-variant: small-caps; letter-spacing: .08em; text-transform: lowercase; }
+.mark.isdone { border-bottom-color: transparent; }
+.pager { display: flex; justify-content: space-between; margin-top: 2.6em; padding-top: 1em; border-top: 1px solid var(--rule); font-size: .95em; }
+.pager a { text-decoration: none; color: var(--soft); }
+.pager a[aria-disabled="true"] { visibility: hidden; }
+
+/* lists */
+.dlist { border-top: 1px solid var(--rule); }
+.drow { display: grid; grid-template-columns: 2.2em 1fr auto; gap: .8em; align-items: baseline; padding: .55em 0; border-bottom: 1px solid var(--rule); text-decoration: none; }
+.drow .num { color: var(--red); text-align: right; }
+.drow .info { min-width: 0; }
+.drow .info span { display: block; font-style: italic; color: var(--soft); font-size: .86em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.drow .state { font-size: .86em; font-style: italic; color: var(--red); }
+.period-note { text-align: center; font-style: italic; color: var(--soft); margin: -.5em 0 1em; font-size: .92em; }
+
+.plinks { border-top: 1px solid var(--rule); }
+.plinks a { display: flex; justify-content: space-between; gap: 1em; padding: .65em 0; border-bottom: 1px solid var(--rule); text-decoration: none; }
+.plinks a span { color: var(--soft); font-style: italic; font-size: .86em; text-align: right; }
+.back { display: inline-block; margin-bottom: 1.5em; color: var(--soft); text-decoration: none; font-size: .92em; }
+
+.prose p { margin: 0 0 .9em; }
+.prose ul { margin: 0; padding-left: 1.1em; }
+.prose li { margin-bottom: .6em; }
+.prose li::marker { color: var(--red); }
+
+.act p { margin: 0 0 .9em; }
+.act .nm { font-style: italic; }
+.sign { display: grid; grid-template-columns: 1fr 1fr; gap: 2em; margin-top: 2em; color: var(--soft); font-style: italic; font-size: .86em; }
+.sign div { border-top: 1px solid var(--ink); padding-top: .2em; }
+
+.field { display: block; margin: 0 0 1.2em; }
+.field > span { display: block; color: var(--soft); font-style: italic; font-size: .9em; }
+select, input[type="text"] { width: 100%; background: transparent; border: 0; border-bottom: 1px solid var(--rule); padding: .3em 0; border-radius: 0; font-size: 1em; -webkit-appearance: none; appearance: none; }
+select { background-image: linear-gradient(45deg, transparent 50%, var(--soft) 50%), linear-gradient(135deg, var(--soft) 50%, transparent 50%); background-position: right 6px center, right 1px center; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 20px; }
+.seg { display: flex; gap: 1.4em; justify-content: center; }
+.seg button { background: none; border: 0; padding: .2em 0; cursor: pointer; color: var(--soft); border-bottom: 1px solid transparent; }
+.seg button[aria-pressed="true"] { color: var(--red); border-bottom-color: var(--red); }
+.textbtn { background: none; border: 0; padding: 0; color: var(--red); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+
+nav.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  background: var(--paper);
+  border-top: 1px solid var(--rule);
+  display: flex; justify-content: center; gap: clamp(14px, 5vw, 32px);
+  padding: 10px 12px calc(12px + env(safe-area-inset-bottom));
+  font-size: 15px;
+}
+nav.tabs a { text-decoration: none; color: var(--soft); font-variant: small-caps; letter-spacing: .08em; text-transform: lowercase; padding: 4px 0; }
+nav.tabs a[aria-current="page"] { color: var(--red); }
+/* install + welcome screens */
+#onboard { position: fixed; inset: 0; z-index: 20; background: var(--paper); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+body.ob-open { overflow: hidden; }
+.ob { max-width: 26em; margin: 0 auto; min-height: 100%; display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: calc(env(safe-area-inset-top) + 48px) max(26px, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 32px) max(26px, env(safe-area-inset-left)); }
+.ob-icon { width: 84px; height: 84px; border-radius: 19px; box-shadow: 0 0 0 1px var(--rule); }
+.ob h1 { font-weight: 400; font-size: 2em; margin: .5em 0 0; line-height: 1.15; }
+.ob-sub { margin: .2em 0 0; color: var(--soft); font-style: italic; }
+.ob-lead { margin: 2.2em 0 .8em; color: var(--red); font-variant: small-caps; letter-spacing: .08em; text-transform: lowercase; }
+.ob-lead.small { margin-top: 1.6em; }
+.ob-steps, .ob-list { text-align: left; margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: .7em; }
+.ob-steps li::marker { color: var(--red); }
+.ob-list li::marker { color: var(--red); }
+.ob-text { margin: 0; }
+.ob .glyph { width: 1.05em; height: 1.05em; vertical-align: -.12em; color: var(--red); }
+.ob-note { margin: 2em 0 0; color: var(--soft); font-style: italic; font-size: .86em; }
+.ob-btn { margin-top: 2em; background: var(--red); color: var(--paper); border: 0; border-radius: 4px; padding: .6em 2.4em; font-size: 1em; cursor: pointer; font-variant: small-caps; letter-spacing: .08em; text-transform: lowercase; }
+.ob-skip { margin-top: auto; padding-top: 2.4em; background: none; border: 0; color: var(--soft); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; font-size: .92em; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div id="onboard" hidden></div>
+<main id="app" aria-live="polite"></main>
+<nav class="tabs" aria-label="Sections">
+  <a href="#today" data-tab="today">Today</a>
+  <a href="#days" data-tab="days">Days</a>
+  <a href="#prayers" data-tab="prayers">Prayers</a>
+  <a href="#consecration" data-tab="consecration">Day 34</a>
+  <a href="#setup" data-tab="setup">Setup</a>
+</nav>
+
+<script>
+const DAYS = [{"n": 1, "blocks": [{"t": "src", "x": "Matthew 5:1-19"}, {"t": "p", "x": "And seeing the multitudes, he went up into a mountain, and when he was set down, his disciples came unto him. And opening his mouth, he taught them, saying: Blessed are the poor in spirit: for theirs is the kingdom of heaven. Blessed are the meek: for they shall possess the land. Blessed are they that mourn: for they shall be comforted. Blessed are they that hunger and thirst after justice: for they shall have their fill. Blessed are the merciful: for they shall obtain mercy. Blessed are the clean of heart: for they shall see God. Blessed are the peacemakers: for they shall be called children of God. Blessed are they that suffer persecution for justice' sake: for theirs is the kingdom of heaven. Blessed are ye when they shall revile you, and persecute you, and speak all that is evil against you, untruly, for my sake: Be glad and rejoice, for your reward is very great in heaven. For so they persecuted the prophets that were before you. You are the salt of the earth. But if the salt lose its savour, wherewith shall it be salted? It is good for nothing any more but to be cast out, and to be trodden on by men. You are the light of the world. A city seated on a mountain cannot be hid. Neither do men light a candle and put it under a bushel, but upon a candlestick, that it may shine to all that are in the house. So let your light shine before men, that they may see your good works, and glorify your Father who is in heaven. Do not think that I am come to destroy the law, or the prophets. I am not come to destroy, but to fulfill. For amen I say unto you, till heaven and earth pass, one jot, or one tittle shall not pass of the law, till all be fulfilled. He therefore that shall break one of these least commandments, and shall so teach men, shall be called the least in the kingdom of heaven. But he that shall do and teach, he shall be called great in the kingdom of heaven."}, {"t": "p", "x": "Examine your conscience, pray, practice renouncement of your own will; mortification, purity of heart. This purity is the indispensable condition for contemplating God in heaven, to see Him on earth and to know Him by the light of faith. The first part of the preparation should be employed in casting off the spirit of the world which is contrary to that of Jesus Christ. The spirit of the world consists essentially in the denial of the supreme dominion of God; a denial which is manifested in practice by sin and disobedience; thus it is principally opposed to the spirit of Christ, which is also that of Mary."}, {"t": "p", "x": "It manifests itself by the concupiscence of the flesh, by the concupiscence of the eyes and by the pride of life, and by disobedience to God's laws and the abuse of created things. Its works are: sin in all forms, then all else by which the devil leads to sin; works which bring error and darkness to the mind, and seduction and corruption to the will. Its pomps are the splendor and the charms employed by the devil to render sin alluring in persons, places and things."}]}, {"n": 2, "blocks": [{"t": "src", "x": "Matthew 5:48, 6:1-15"}, {"t": "p", "x": "Be you therefore perfect, as also your heavenly Father is perfect...Take heed that you do not your justice before men, to be seen by them: otherwise you shall not have a reward of your Father who is in heaven. Therefore when thou dost an almsdeed, sound not a trumpet before thee, as the hypocrites do in the synagogues and in the streets, that they may be honoured by men. Amen I say to you, they have received their reward. But when thou dost alms, let not thy left hand know what thy right hand doth. That thy alms may be in secret, and thy Father who seeth in secret will repay thee. And when ye pray, you shall not be as the hypocrites, that love to stand and pray in the synagogues and corners of the streets, that they may be seen by men: Amen I say to you, they have received their reward. But thou when thou shalt pray, enter into thy chamber, and having shut the door, pray to thy Father in secret: and thy Father who seeth in secret will repay thee. And when you are praying, speak not much, as the heathens. For they think that in their much speaking they may be heard. Be not you therefore like to them, for your Father knoweth what is needful for you, before you ask him. Thus therefore shall you pray: Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our supersubstantial bread. And forgive us our debts, as we also forgive our debtors. And lead us not into temptation. But deliver us from evil. Amen. For if you will forgive men their offences, your heavenly Father will forgive you also your offences. But if you will not forgive men, neither will your Father forgive you your offences."}]}, {"n": 3, "blocks": [{"t": "src", "x": "Matthew 7:1-14"}, {"t": "p", "x": "Judge not, that you may not be judged, For with what judgment you judge, you shall be judged: and with what measure you mete, it shall be measured to you again. Any why seest thou the mote that is in thy brother's eye; and seest not the beam that is in thy own eye? Or how sayest thou to thy brother: Let me cast the mote out of thy eye; and behold a beam is in thy own eye? Thou hypocrite, cast out first the beam in thy own eye, and then shalt thou see to cast out the mote out of thy brother's eye. Give not that which is holy to dogs; neither cast ye your pearls before swine, lest perhaps they trample them under their feet, and turning upon you, they tear you. Ask, and it shall be given you: seek, and you shall find: knock, and it shall be opened to you. For every one that asketh, receiveth: and he that seeketh, findeth: and to him that knocketh, it shall be opened. Or what man is there among you, of whom if his son shall ask bread, will he reach him a stone? Or if he shall ask him a fish, will he reach him a serpent? If you then being evil, know how to give good gifts to your children: how much more will your Father who is in heaven, give good things to them that ask him? All things therefore whatsoever you would that men should do to you, do you also to them. For this is the law and the prophets. Enter ye in at the narrow gate: for wide is the gate, and broad is the way that leadeth to destruction, and many there are who go in thereat. How narrow is the gate, and strait is the way that leadeth to life: and few there are that find it!"}]}, {"n": 4, "blocks": [{"t": "src", "x": "Imitation of Christ, by Thomas á Kempis: Book 3, Chapters 7, 40"}, {"t": "p", "x": "That man has no good of himself, and that he cannot glory in anything Lord, what is man, that Thou art mindful of him; or the son of man, that Thou visit him? What has man deserved that Thou should give him grace? Lord, what cause have I to complain, if Thou forsakest me, or what can I justly allege, if what I petition Thou shalt not grant? This most assuredly, I may truly think and say: Lord I am nothing, I can do nothing of myself, that is good, but I am in all things defective and ever tend to nothing. And unless I am assisted and interiorly instructed by Thee, I become wholly tepid and relaxed, but Thou, O Lord, art always the same, and endurest unto eternity, ever good, just and holy, doing all things well, justly and holily and disposing them in wisdom."}, {"t": "p", "x": "But I who am more inclined to go back, than to go forward, continue not always in one state, for I am changed, seven different times. But it quickly becomes better when it pleases Thee, and Thou stretchest out Thy helping hand: for Thou alone, without man's aid can assist me and so strengthen me, that my countenance shall be more diversely changed: but my heart be converted and find its rest in Thee alone."}, {"t": "p", "x": "He who would be too secure in time of peace will often be found too much dejected in time of war. If you could always continue to be humble and little in your own eyes, and keep your spirit in due order and subjection, you would not fall so easily into danger and offense. It is good counsel that, when you have conceived the spirit of fervor, you should meditate how it will be when that light shall be withdrawn."}]}, {"n": 5, "blocks": [{"t": "src", "x": "Imitation of Christ, by Thomas á Kempis: Book 3, Chapter 40"}, {"t": "p", "x": "Wherefore, but I did know well, how to cast from me all human comfort, either for the sake of devotion, or through the necessity by which I am compelled to seek Thee, because there is no man that can comfort me. Then might I deservedly hope in Thy favor, and rejoice in the gift of a new consolation. Thanks be to Thee from Whom all things proceed, as often as it happens to me. I, indeed, am but vanity, and nothing in Thy sight , an inconstant and weak man. Where, therefore, can I glory, or for what do I desire to be thought of highly?"}, {"t": "p", "x": "Forsooth of my very nothingness; and this is most vain. Truly vainglory is an evil plague, because it draws away from true glory, and robs us of heavenly grace. For, while a man takes complacency in himself, he displeases Thee; while he wants for human applause, he is deprived of true virtues. But true, glory and holy exultation is to glory in Thee, and not in one's self; to rejoice in Thy Name, but not in one's own strength. To find pleasure in no creature, save only for Thy sake. Let Thy Name be praised, not mine; let Thy work be magnified, not mine; let Thy Holy Name be blessed, but let nothing be attributed to me of the praise of men. Thou art my glory; Thou art the exultation of my heart; in Thee, will I glory and rejoice all the day; but for myself, I will glory in nothing but in my infirmities."}]}, {"n": 6, "blocks": [{"t": "src", "x": "Imitation of Christ, by Thomas á Kempis: Book 1, Chapter 18"}, {"t": "sub", "x": "On the examples of the Holy Fathers."}, {"t": "p", "x": "Look upon the lively examples of the holy Fathers in whom shone real perfection and the religious life, and you will see how little it is, and almost nothing that we do. Alas, what is our life when we compare it with theirs? Saints and friends of Christ, they served our Lord in hunger and in thirst, in cold, in nakedness, in labor and in weariness, in watching, in fasting, prayers and holy meditations, and in frequent persecutions and reproaches. Oh, how many grievous tribulations did the Apostles suffer and the Martyrs and Confessors and Virgins, and all the rest who resolved to follow the steps of Christ! For they hated their lives in this world, that they might keep them in life everlasting. Oh what a strict and self-renouncing life the holy Fathers of the desert led! What long and grievous temptations did they bear! How often were they harassed by the enemy, what frequent and fervent prayers did they offer up to God, what rigorous abstinence did they practice!"}, {"t": "p", "x": "What a valiant contest waged they to subdue their imperfections! What purity and straightforwardness of purpose kept they towards God! By day they labored, and much of the night they spent in prayer; though while they labored, they were far from leaving off mental prayer. They spent all their time profitably. Every hour seemed short to spend with God; and even their necessary bodily refreshment was forgotten in the great sweetness of contemplation. They renounced all riches, dignities, honors and kindred; they hardly took what was necessary for life. It grieved them to serve the body even in its necessity. Accordingly, they were poor in earthly things, but very rich in grace and virtues."}]}, {"n": 7, "blocks": [{"t": "src", "x": "Imitation of Christ, by Thomas á Kempis: Book 1, Chapter 18, cont."}, {"t": "p", "x": "Outwardly they suffered want, but within they were refreshed with grace and Divine consolation. They were aliens to the world; they seemed as nothing and the world despised them; but they were precious and beloved in the sight of God. They persevered in true humility, they lived in simple obedience, they walked in charity and patience, and so every day they advanced in spirit and gained great favor with God. They were given for example to all religious, and ought more to excite us to advance in good, than the number of lukewarm to induce us to grow remiss. Oh! how great was the fervor of all religious in the beginning of their holy institute! Oh, how great was their devotion in prayer, how great was their zeal for virtue! How vigorous the discipline that was kept up, what reverence and obedience, under the rule of the superior, flourished in all! Their traces that remain still bear witness, that they were truly holy and perfect men who did battle so stoutly, and trampled the world under their feet. Now, he is thought great who is not a transgressor; and who can, with patience, endure what he has undertaken. Ah, the lukewarmness and negligence of our state! that we soon fall away from our first fervor, and are even now tired with life, from slothfulness and tepidity. Oh that advancement in virtue be not quite asleep in thee, who has so often seen the manifold examples of the devout!"}]}, {"n": 8, "blocks": [{"t": "src", "x": "Imitation of Christ, by Thomas á Kempis: Book 1, Chapter 13"}, {"t": "sub", "x": "Of Resisting Temptations"}, {"t": "p", "x": "As long as we live in this world, we cannot be without temptations and tribulations. Hence it is written in Job \"Man's life on earth is a temptation.\" Everyone therefore should be solicitous about his temptations and watch in prayer lest the devil find an opportunity to catch him: who never sleeps, but goes about, seeking whom he can devour. No one is so perfect and holy as sometimes not to have temptations and we can never be wholly free from them. Nevertheless, temptations are very profitable to man, troublesome and grievous though they may be, for in them, a man is humbled, purified and instructed. All the Saints passed through many tribulations and temptations and were purified by them. And they that could not support temptations, became reprobate, and fell away."}, {"t": "p", "x": "Many seek to flee temptations, and fall worse into them. We cannot conquer by flight alone, but by patience and true humility we become stronger than all our enemies. He who only declines them outwardly, and does not pluck out their root, will profit little; nay, temptations will sooner return and he will find himself in a worse condition. By degrees and by patience you will, by God's grace, better overcome them than by harshness and your own importunity. Take council the oftener in temptation, and do not deal harshly with one who is tempted; but pour in consolation, as thou wouldst wish to be done unto yourself. Inconstancy of mind and little confidence in God, is the beginning of all temptations. For as a ship without a helm is driven to and fro by the waves, so the man who neglects and gives up his resolutions is tempted in many ways."}]}, {"n": 9, "blocks": [{"t": "src", "x": "Imitation of Christ, by Thomas á Kempis: Book 1, Chapter 13, cont."}, {"t": "p", "x": "Fire tries iron, and temptation a just man. We often know not what we are able to do, but temptations discover what we are. Still, we must watch, especially in the beginning of temptation; for then the enemy is more easily overcome, if he be not suffered to enter the door of the mind, but is withstood upon the threshold the very moment he knocks. Whence a certain one has said \"Resist beginnings; all too late the cure.\" When ills have gathered strength, by long delay, first there comes from the mind a simple thought; then a strong imagination, afterwards delight, and the evil motion and consent and so, little by little the fiend does gain entrance, when he is not resisted in the beginning. The longer anyone has been slothful in resisting, so much the weaker he becomes, daily in himself, and the enemy, so much the stronger in him. Some suffer grievous temptations in the beginning of their conversion, others in the end and others are troubled nearly their whole life. Some are very lightly tempted, according to the wisdom and the equity of the ordinance of God who weighs man's condition and merits, and pre-ordaineth all things for the salvation of His elect. We must not, therefore, despair when we are tempted, but the more fervently pray to God to help us in every tribulation: Who, of a truth, according to the sayings of St. Paul, will make such issue with the temptation, that we are able to sustain it."}, {"t": "p", "x": "Let us then humble our souls under the hand of God in every temptation and tribulation, for the humble in spirit, He will save and exalt. In temptation and tribulations, it is proved what progress man has made; and there also is great merit, and virtue is made more manifest."}]}, {"n": 10, "blocks": [{"t": "src", "x": "Imitation of Christ, by Thomas á Kempis: Book 3, Chapter 10"}, {"t": "sub", "x": "That it is sweet to despise the world and to serve God"}, {"t": "p", "x": "Now, will I speak again, O Lord, and will not be silent, I will say in the hearing of my God and my King Who is on high: Oh, how great is the abundance of Thy sweetness, O Lord, which Thou hast hidden for those that fear Thee! But what art Thou, for those who love Thee? What, to those who serve Thee with their whole heart? Unspeakable indeed is the sweetness of Thy contemplation, which Thou bestowest on those who love Thee. In this most of all hast Thou showed me the sweetness of Thy love, that when I had no being, Thou didst make me; and when I was straying far from Thee, Thou brought me back again, that I might serve Thee: and Thou hast commanded me to serve Thee. O Fountain of everlasting love, what shall I say of Thee? How can I forget Thee, Who hast vouchsafed to remember me even after I was corrupted and lost? Beyond all hope Thou showest mercy to Thy servant; and beyond all desert, hast Thou manifested Thy grace and friendship. What return shall I make to Thee for this favor? For it is granted to all who forsake these things, to renounce the world, and to assume the monastic life. Is it much that I should serve Thee, Whom the whole creation is bound to serve? It ought not to seem much to me to serve Thee; but this does rather appear great and wonderful to me, that Thou vouchsafest to receive one so wretched and unworthy as Thy servant. It is a great honor, a great glory, to serve Thee, and to despise all things for Thee, for they who willingly subject themselves to Thy holy service, shall have great grace. They shall experience the most sweet consolation of the Holy Spirit, Who for the love of Thee, have cast aside all carnal delight."}]}, {"n": 11, "blocks": [{"t": "src", "x": "Imitation of Christ, by Thomas á Kempis: Book 1, Chapter 25"}, {"t": "sub", "x": "On the Fervent Amendment of our Whole Life"}, {"t": "p", "x": "When a certain anxious person, who often times wavered between hope and fear, once overcome with sadness, threw himself upon the ground in prayer, before one of the altars in the Church and thinking these things in his mind, said \"Oh, if I only knew how to persevere,\" that very instant he heard within him, this heavenly answer: \"And if thou didst know this, what would thou do? Do now what you would do, and thou shall be perfectly secure.\" And immediately being consoled, and comforted, he committed himself to the Divine Will, and his anxious thoughts ceased. He no longer wished for curious things; searching to find out what would happen to him, but studied rather to learn what was the acceptable and perfect will of God for the beginning and the perfection of every good work."}, {"t": "p", "x": "\"Hope in the Lord,\" said the Prophet, \"And do all good, and inhabit the land, and thou shall be fed of the riches thereof.\" There is one thing that keeps many back from spiritual progress, and from fervor in amendment namely: the labor that is necessary for the struggle. And assuredly they especially advance beyond others in virtues, who strive the most manfully to overcome the very things which are the hardest and most contrary to them. For there a man does profit more and merit more abundant grace, when he does most to overcome himself and mortify his spirit. All have not, indeed, equal difficulties to overcome and mortify, but a diligent and zealous person will make a greater progress though he have more passions than another, who is well regulated but less fervent in the pursuit of virtues."}]}, {"n": 12, "blocks": [{"t": "src", "x": "Imitation of Christ, by Thomas á Kempis: Book 1, Chapter 25., cont."}, {"t": "p", "x": "But if thou observest any thing worthy of reproof, beware thou do not the same. And if at any time thou hast done it, labor quickly to amend thyself. As thine eye observeth others, so art thou by others noted again."}, {"t": "p", "x": "How sweet and pleasant a thing it is, to see brethren fervent and devout, obedient and well-disciplined! How sad and grievous a thing it is, to see them walk disorderly, not applying themselves to that for which they are called! How hurtful a thing it is, when they neglect the purpose of their calling and busy themselves in things not committed to their care!"}, {"t": "p", "x": "Be mindful of the purpose thou hast embraced, and set always before thee the image of the Crucified. Good cause thou hast to be ashamed in looking upon the life of Jesus Christ, seeing thou hast not as yet endeavored to conform thyself more unto Him, though thou hast been a long time in the way of God. A religious person that exercizeth himself seriously and devoutly in the most holy life and passion of our Lord, shall there abundantly find whatsoever is profitable and necessary for him, neither shall he need to seek any better thing, besides Jesus. O if Jesus crucified would come into our hearts, how quickly and fully should we be. A man fervent and diligent is prepared for all things."}, {"t": "p", "x": "It is harder toil to resist vices and passions, than to sweat in bodily labors. He that avoideth not small faults, by little and little falleth into greater. Thou wilt always rejoice in the evening, if thou spend the day profitably. Be watchful over thyself, stir up thyself, warn thyself, and whatsoever becometh of others, neglect not thyself. The more violent thou uses against thyself, the more shalt thou progress. Amen."}]}, {"n": 13, "blocks": [{"t": "p", "x": "Prayers, examinations, reflection, acts of renouncement of our own will, of contrition for our sins, of contempt of self, all performed at the feet of Mary, for it is from her that we hope for light to know ourselves. It is near her, that we shall be able to measure the abyss of our miseries without despairing."}, {"t": "p", "x": "We should employ all our pious actions in asking for a knowledge of ourselves and contrition of our sins: and we should do this in a spirit of piety. During this period, we shall consider not so much the opposition that exists between the spirit of Jesus and ours, as the miserable and humiliating state to which our sins have reduced us. Moreover, the True Devotion being an easy, short, sure and perfect way to arrive at that union with Our Lord which is Christlike perfection, we shall enter seriously upon this way, strongly convinced of our misery and helplessness. But how attain this without a knowledge of ourselves'?"}, {"t": "src", "x": "Luke 11:1-10"}, {"t": "p", "x": "And it came to pass, that as he was in a certain place praying, when he ceased, one of his disciples said to him: Lord, teach us to pray, as John also taught his disciples. And he said to them: When you pray, say: Father, hallowed be thy name. Thy kingdom come. Give us this day our daily bread. And forgive us our sins, for we also forgive every one that is indebted to us. And lead us not into temptation."}, {"t": "p", "x": "And he said to them: Which of you shall have a friend, and shall go to him at midnight, and shall say to him: Friend, lend me three loaves, Because a friend of mine is come off his journey to me, and I have not what to set before him. And he from within should answer, and say: Trouble me not, the door is now shut, and my children are with me in bed; I cannot rise and give thee. Yet if he shall continue knocking, I say to you, although he will not rise and give him, because he is his friend; yet, because of his importunity, he will rise, and give him as many as he needeth."}, {"t": "p", "x": "And I say to you, Ask, and it shall be given you: seek, and you shall find: knock, and it shall be opened to you. For every one that asketh, receiveth; and he that seeketh, findeth; and to him that knocketh, it shall be opened."}]}, {"n": 14, "blocks": [{"t": "src", "x": "Imitation of Christ, by Thomas á Kempis: Book 3, Chapter 13"}, {"t": "sub", "x": "Of the Obedience of One in Humble Subjection, After the Example of Jesus Christ"}, {"t": "p", "x": "My son, he that endeavoreth to withdraw himself from obedience, withdraweth himself from grace; and he who seeketh for himself private benefit (Matt. 16:24), loseth those which are common. He that doth not cheerfully and freely submit himself to his superior, it is a sign that his flesh is not as yet perfectly obedient unto him, but oftentimes kicketh and murmureth against him. Learn thou therefore quickly to submit thyself to thy superior, if thou desire to keep thine own flesh under the yoke. For more speedily is the outward enemy overcome, if the inward man be not laid waste. There is no worse nor more troublesome enemy to the soul than thou art unto thyself, if thou be not well in harmony with the Spirit. It is altogether necessary that thou take up a true contempt for thyself, if thou desire to prevail against flesh and blood. Because as yet thou lovest thyself too inordinately, therefore thou art afraid to resign thyself wholly to the will of others. And yet, what great matter is it, if thou, who art but dust and nothing, subject thyself to a man for God's sake, when I, the Almighty and the Most Highest who created all things of nothing, humbly subjected Myself to man for thy sake?"}, {"t": "p", "x": "I became of all men the most humble and the most abject (Luke 2:7; John 13:14), that thou mightest overcome thy pride with My humility. O dust! learn to be obedient. Learn to humble thyself, thou earth and clay, and to bow thyself down under the feet of all men. Learn to break thine own wishes, and to yield thyself to all subjection."}]}, {"n": 15, "blocks": [{"t": "src", "x": "Luke 13:1-5"}, {"t": "sub", "x": "Examples inviting Repentance"}, {"t": "p", "x": "And there were present, at that very time, some that told him of the Galileans, whose blood Pilate had mingled with their sacrifices. And he answering, said to them: Think you that these Galileans were sinners above all the men of Galilee, because they suffered such things? No, I say to you: but unless you shall do penance, you shall all likewise perish. Or those eighteen upon whom the tower fell in Siloe, and slew them: think you, that they also were debtors above all the men that dwelt in Jerusalem? No, I say to you; but except you do penance, you shall all likewise perish."}, {"t": "src", "x": "True Devotion to the Blessed Virgin Mary, Nos. 81 and 82"}, {"t": "sub", "x": "We Need Mary in order to Die to Ourselves"}, {"t": "p", "x": "Secondly, in order to empty ourselves of self, we must die daily to ourselves. This involves our renouncing what the powers of the soul and the senses of the body incline us to do. We must see as if we did not see, hear as if we did not hear and use the things of this world as if we did not use them. This is what St. Paul calls \"dying daily\". Unless the grain of wheat falls to the ground and dies, it remains only a single grain and does not bear any good fruit. If we do not die to self and if our holiest devotions do not lead us to this necessary and fruitful death, we shall not bear fruit of any worth and our devotions will cease to be profitable. All our good works will be tainted by self-love and self-will so that our greatest sacrifices and our best actions will be unacceptable to God. Consequently when we come to die we shall find ourselves devoid of virtue and merit and discover that we do not possess even one spark of that pure love which God shares only with those who have died to themselves and whose life is hidden with Jesus Christ in him."}, {"t": "p", "x": "Thirdly, we must choose among all the devotions to the Blessed Virgin the one which will lead us more surely to this dying to self. This devotion will be the best and the most sanctifying for us."}]}, {"n": 16, "blocks": [{"t": "src", "x": "From True Devotion To the Blessed Virgin Mary, No. 228"}, {"t": "sub", "x": "Preparatory Exercises"}, {"t": "p", "x": "During the first week they should offer up all their prayers and acts of devotion to acquire knowledge of themselves and sorrow for their sins. Let them perform all their actions in a spirit of humility. With this end in view they may, if they wish, meditate on what I have said concerning our corrupted nature, and consider themselves during six days of the week as nothing but sails, slugs, toads, swine, snakes and goats. Or else they may meditate on the following three considerations of St. Bernard: \"Remember what you were -corrupted seed; what you are - a body destined for decay; what you will be -food for worms.\" They will ask our Lord and the Holy Spirit to enlighten them saying, \"Lord, that I may see,\" or \"Lord, let me know myself,\" or the \"Come, Holy Spirit\". Every day they should say the Litany of the Holy Spirit, with the prayer that follows, as indicated in the first part of this work. They will turn to our Blessed Lady and beg her to obtain for them that great grace which is the foundation of all others, the grace of self-knowledge. For this intention they will say each day the Ave Maris Stella and the Litany of the Blessed Virgin."}, {"t": "src", "x": "Imitation of Christ, by Thomas á Kempis: Book 2, Chapter 5"}, {"t": "sub", "x": "Of Self-consideration"}, {"t": "p", "x": "We cannot trust over much to ourselves (Jer. 17:5), because grace oftentimes is wanting to us, and understanding also. Little light is there in us, and this we quickly lose by our negligence. Oftentimes too we perceive not our inward blindness how great it is. Oftentimes we do evil, and excuse it worse (Psalm 141:4). We are sometimes moved with passion, and we think it zeal. We reprehend small things in others, and pass over our own greater matters (Matt. 7:5). Quickly enough we feel and weigh what we suffer at the hands of others; but we mind not how much others suffer from us. He that well and rightly considereth his own works, will find little cause to judge hardly of another."}]}, {"n": 17, "blocks": [{"t": "src", "x": "From True Devotion To the Blessed Virgin Mary, No. 228"}, {"t": "p", "x": "Of Judgment, and the Punishment of Sinners In all things look to the end; and how thou wilt stand before that strict Judge (Heb. 10:31) to whom nothing is hid, who is not appeased with gifts, nor admitteth excuses, but will judge according to right. O wretched and foolish sinner, who sometimes art in terror at the countenance of an angry man, what answer wilt thou make to God who knoweth all thy wickedness (Job 9:2)! Why dost thou not provide for thyself (Luke 16:9) against the day of judgement, when no man can be excused of defended by another, but every one shall be a sufficient burden for himself!"}, {"t": "src", "x": "Luke 16:1-8"}, {"t": "sub", "x": "The Crafty Steward"}, {"t": "p", "x": "And he said also to his disciples: There was a certain rich man who had a steward: and the same was accused unto him, that he had wasted his goods. And he called him, and said to him: How is it that I hear this of thee? give an account of thy stewardship: for now thou canst be steward no longer. And the steward said within himself: What shall I do, because my lord taketh away from me the stewardship? To dig I am not able; to beg I am ashamed. I know what I will do, that when I shall be removed from the stewardship, they may receive me into their houses. Therefore calling together every one of his lord's debtors, he said to the first: How much dost thou owe my lord? But he said: An hundred barrels of oil. And he said to him: Take thy bill and sit down quickly, and write fifty. Then he said to another: And how much dost thou owe? Who said: An hundred quarters of wheat. He said to him: Take thy bill, and write eighty. And the lord commended the unjust steward, forasmuch as he had done wisely: for the children of this world are wiser in their generation than the children of light."}]}, {"n": 18, "blocks": [{"t": "src", "x": "Luke 17:1-10"}, {"t": "p", "x": "[On Leading Others Astray] And he said to his disciples: It is impossible that scandals should not come: but woe to him through whom they come. It were better for him, that a millstone were hanged about his neck, and he cast into the sea, than that he should scandalize one of these little ones."}, {"t": "p", "x": "[On Brotherly Correction] Take heed to yourselves. If thy brother sin against thee, reprove him: and if he do penance, forgive him. And if he sin against thee seven times in a day, and seven times in a day be converted unto thee, saying, I repent; forgive him."}, {"t": "p", "x": "[The Power of Faith] And the apostles said to the Lord: Increase our faith. And the Lord said: If you had faith like to a grain of mustard seed, you might say to this mulberry tree, Be thou rooted up, and be thou transplanted into the sea: and it would obey you."}, {"t": "p", "x": "[Humble Service] But which of you having a servant ploughing, or feeding cattle, will say to him, when he is come from the field: Immediately go, sit down to meat: And will not rather say to him: Make ready my supper, and gird thyself, and serve me, whilst I eat and drink, and afterwards thou shalt eat and drink? Doth he thank that servant, for doing the things which he commanded him? I think not. So you also, when you shall have done all these things that are commanded you, say: We are unprofitable servants; we have done that which we ought to do."}, {"t": "src", "x": "Imitation of Christ, by Thomas á Kempis: Book 3, Chapter 47"}, {"t": "sub", "x": "That All Grievous Things Are to Be Endured For the Sake of Eternal Life"}, {"t": "p", "x": "My son, be not wearied out by the labors which thou hast undertaken for My sake, nor let tribulation cast thee down ever at all; but let My promise strengthen and comfort thee under every circumstance. I am well able to reward thee, above all measure and degree. Thou shalt not long toil here, nor always be oppressed with griefs. Wait a little while, and thou shalt see a speedy end of thine evils."}]}, {"n": 19, "blocks": [{"t": "src", "x": "Luke 18:15-30"}, {"t": "p", "x": "[Jesus and the Children] And they brought unto him also infants, that he might touch them. Which when the disciples saw, they rebuked them. But Jesus, calling them together, said: Suffer children to come to me, and forbid them not: for of such is the kingdom of God. Amen, I say to you: Whosoever shall not receive the kingdom of God as a child, shall not enter into it."}, {"t": "p", "x": "[The Rich Aristocrat] And a certain ruler asked him, saying: Good master, what shall I do to possess everlasting life? And Jesus said to him: Why dost thou call me good? None is good but God alone. Thou knowest the commandments: Thou shalt not kill: Thou shalt not commit adultery: Thou shalt not steal: Thou shalt not bear false witness: Honour thy father and mother. Who said: All these things have I kept from my youth. Which when Jesus had heard, he said to him: Yet one thing is wanting to thee: sell all whatever thou hast, and give to the poor, and thou shalt have treasure in heaven: and come, follow me. He having heard these things, became sorrowful; for he was very rich."}, {"t": "p", "x": "[The Danger of Riches] And Jesus seeing him become sorrowful, said: How hardly shall they that have riches enter into the kingdom of God. For it is easier for a camel to pass through the eye of a needle, than for a rich man to enter into the kingdom of God. And they that heard it, said: Who then can be saved? He said to them: The things that are impossible with men, are possible with God."}, {"t": "p", "x": "[The Reward of Renunciation] Then Peter said: Behold, we have left all things, and have followed thee. Who said to them: Amen, I say to you, there is no man that hath left house, or parents, or brethren, or wife, or children, for the kingdom of God's sake, Who shall not receive much more in this present time, and in the world to come life everlasting."}]}, {"n": 20, "blocks": [{"t": "p", "x": "Acts of love, pious affection for the Blessed Virgin, imitation of her virtues, especially her profound humility, her lively faith, her blind obedience, her continual mental prayer, her mortification in all things, her surpassing purity, her ardent charity, her heroic patience, her angelic sweetness, and her divine wisdom: \"there being,\" as St. Louis De Montfort says, \"the ten principal virtues of the Blessed Virgin.\""}, {"t": "p", "x": "We must unite ourselves to Jesus through Mary - this is the characteristic of our devotion; therefore, Saint Louis De Montfort asks that we employ ourselves in acquiring a knowledge of the Blessed Virgin."}, {"t": "p", "x": "Mary is our sovereign and our mediatrix, our Mother and our Mistress. Let us then endeavor to know the effects of this royalty, of this mediation, and of this maternity, as well as the grandeurs and prerogatives which are the foundation or consequences thereof. Our Mother is also a perfect mold wherein we are to be molded in order to make her intentions and dispositions ours. This we cannot achieve without studying the interior life of Mary; namely, her virtues, her sentiments, her actions, her participation in the mysteries of Christ and her union with Him."}, {"t": "src", "x": "Luke 2:16-21, 45-52"}, {"t": "p", "x": "And they came with haste; and they found Mary and Joseph, and the infant lying in the manger. And seeing, they understood of the word that had been spoken to them concerning this child. And all that heard, wondered; and at those things that were told them by the shepherds. But Mary kept all these words, pondering them in her heart. And the shepherds returned, glorifying and praising God, for all the things they had heard and seen, as it was told unto them. And after eight days were accomplished, that the child should be circumcised, his name was called JESUS, which was called by the angel, before he was conceived in the womb..."}, {"t": "p", "x": "...And not finding him, they returned into Jerusalem, seeking him. And it came to pass, that, after three days, they found him in the temple, sitting in the midst of the doctors, hearing them, and asking them questions. And all that heard him were astonished at his wisdom and his answers. And seeing him, they wondered. And his mother said to him: Son, why hast thou done so to us? behold thy father and I have sought thee sorrowing. And he said to them: How is it that you sought me? did you not know, that I must be about my father's business? And they understood not the word that he spoke unto them. And he went down with them, and came to Nazareth, and was subject to them. And his mother kept all these words in her heart. And Jesus advanced in wisdom, and age, and grace with God and men."}]}, {"n": 21, "blocks": [{"t": "src", "x": "From Secret of Mary: Nos. 23-24"}, {"t": "sub", "x": "True Devotion to Our Blessed Lady"}, {"t": "p", "x": "If we would go up to God, and be united with Him, we must use the same means He used to come down to us to be made Man and to impart His graces to us. This means is a true devotion to our Blessed Lady. There are several true devotions to our Lady: here I do not speak of those which are false. The first consists in fulfilling our Christian duties, avoiding mortal sin, acting more out of love than with fear, praying to our Lady now and then, honoring her as the Mother of God, yet without having any special devotion to her. The second consists in entertaining for our Lady more perfect feelings of esteem and love, of confidence and veneration. It leads us to join the Confraternities of the Holy Rosary and of the Scapular, to recite the five or the fifteen decades of the Holy Rosary, to honor Mary's images and altars, to publish her praises and to enroll ourselves in her modalities. This devotion is good, holy and praiseworthy if we keep ourselves free from sin. But it is not so perfect as the next, nor so efficient in severing our soul from creatures, in detaching ourselves in order to be united with Jesus Christ. The third devotion to our Lady, known and practiced by very few persons, is this I am about to disclose to you, predestinate soul. It consists in giving one's self entirely and as a slave to Mary, and to Jesus through Mary, and after that, to do all that we do, through Mary, with Mary in Mary and for Mary We should choose a special feast day on which we give, consecrate and sacrifice to Mary voluntarily lovingly and without constraint, entirely and without reserve: our body and soul, our exterior property such as house, family and income, and also our interior and spiritual possessions: namely, our merits, graces, virtues, and satisfactions."}]}, {"n": 22, "blocks": [{"t": "src", "x": "From True Devotion To the Blessed Virgin Mary, Nos. 106-110"}, {"t": "sub", "x": "Marks of authentic devotion to our Lady"}, {"t": "p", "x": "106. First, true devotion to our Lady is interior, that is, it comes from within the mind and the heart and follows from the esteem in which we hold her, the high regard we have for her greatness, and the love we bear her."}, {"t": "p", "x": "107. Second, it is trustful, that is to say, it fills us with confidence in the Blessed Virgin, the confidence that a child has for its loving Mother. It prompts us to go to her in every need of body and soul with great simplicity, trust and affection."}, {"t": "p", "x": "108. Third, true devotion to our Lady is holy, that is, it leads us to avoid sin and to imitate the virtues of Mary. Her ten principal virtues are: deep humility, lively faith, blind obedience, unceasing prayer, constant self-denial, surpassing purity, ardent love, heroic patience, angelic kindness, and heavenly wisdom."}, {"t": "p", "x": "109. Fourth, true devotion to our Lady is constant. It strengthens us in our desire to do good and prevents us from giving up our devotional practices too easily. It gives us the courage to oppose the fashions and maxims of the world, the vexations and unruly inclinations of the flesh and the temptations of the devil. Thus a person truly devoted to our Blessed Lady is not changeable, fretful, scrupulous or timid."}, {"t": "p", "x": "110. Fifth, true devotion to Mary is disinterested. It inspires us to seek God alone in his Blessed Mother and not ourselves. The true subject of Mary does not serve his illustrious Queen for selfish gain. He does not serve her for temporal or eternal well-being but simply and solely because she has the right to be served and God alone in her."}]}, {"n": 23, "blocks": [{"t": "src", "x": "From True Devotion To the Blessed Virgin Mary, Nos. 120-121"}, {"t": "sub", "x": "Nature of perfect devotion to the Blessed Virgin or perfect consecration to Jesus Christ"}, {"t": "p", "x": "120. As all perfection consists in our being conformed, united and consecrated to Jesus it naturally follows that the most perfect of all devotions is that which conforms, unites, and consecrates us most completely to Jesus. Now of all God's creatures Mary is the most conformed to Jesus. It therefore follows that, of all devotions, devotion to her makes for the most effective consecration and conformity to him. The more one is consecrated to Mary, the more one is consecrated to Jesus. That is why perfect consecration to Jesus is but a perfect and complete consecration of oneself to the Blessed Virgin, which is the devotion I teach; or in other words, it is the perfect renewal of the vows and promises of holy baptism."}, {"t": "p", "x": "121. This devotion consists in giving oneself entirely to Mary in order to belong entirely to Jesus through her. It requires us to give:"}, {"t": "p", "x": "(1) Our body with its senses and members; (2) Our soul with its faculties; (3) Our present material possessions and all we shall acquire in the future; (4) Our interior and spiritual possessions, that is, our merits, virtues and good actions of the past, the present and the future."}, {"t": "p", "x": "In other words, we give her all that we possess both in our natural life and in our spiritual life as well as everything we shall acquire in the future in the order of nature, of grace, and of glory in heaven. This we do without any reservation, not even of a penny, a hair, or the smallest good deed. And we give for all eternity without claiming or expecting, in return for our offering and our service, any other reward than the honour of belonging to our Lord through Mary and in Mary, even though our Mother were not - as in fact she always is - the most generous and appreciative of all God's creatures."}]}, {"n": 24, "blocks": [{"t": "src", "x": "From True Devotion To the Blessed Virgin Mary, No. 152-164"}, {"t": "p", "x": "This devotion is a smooth, short, perfect and sure way of attaining union with our Lord, in which Christian perfection consists. (a) This devotion is a smooth way. It is the path which Jesus Christ opened up in coming to us and in which there is no obstruction to prevent us reaching him. It is quite true that we can attain to divine union by other roads, but these involve many more crosses and exceptional setbacks and many difficulties that we cannot easily overcome. (b) This devotion is a short way to discover Jesus, either because it is a road we do not wander from, or because, as we have just said, we walk along this road with greater ease and joy, and consequently with greater speed. We advance more in a brief period of submission to Mary and dependence on her than in whole years of self-will and self-reliance. (c) This devotion is a perfect way to reach our Lord and be united to him, for Mary is the most perfect and the most holy of all creatures, and Jesus, who came to us in a perfect manner, chose no other road for his great and wonderful journey. The Most High, the Incomprehensible One, the Inaccessible One, He who is, deigned to come down to us poor earthly creatures who are nothing at all. How was this done? The Most High God came down to us in a perfect way through the humble Virgin Mary, without losing anything of his divinity or holiness. It is likewise through Mary that we poor creatures must ascend to almighty God in a perfect manner without having anything to fear.(d) This devotion to our Lady is a sure way to go to Jesus and to acquire holiness through union with him. The devotion which I teach is not new. Indeed it could not be condemned without overthrowing the foundations of Christianity. It is obvious then that this devotion is not new. If it is not commonly practised, the reason is that it is too sublime to be appreciated and undertaken by everyone. This devotion is a safe means of going to Jesus Christ, because it is Mary's role to lead us safely to her Son."}]}, {"n": 25, "blocks": [{"t": "src", "x": "From True Devotion To the Blessed Virgin Mary, Nos. 213-225"}, {"t": "sub", "x": "Wonderful Effects of this Devotion"}, {"t": "p", "x": "213. My dear friend, be sure that if you remain faithful to the interior and exterior practices of this devotion which I will point out, the following effects will be produced in your soul:"}, {"t": "sub", "x": "1. Knowledge of our unworthiness:"}, {"t": "p", "x": "By the light which the Holy Spirit will give you through Mary, his faithful spouse, you will perceive the evil inclinations of your fallen nature and how incapable you are of any good. Finally, the humble Virgin Mary will share her humility with you so that, although you regard yourself with distaste and desire to be disregarded by others, you will not look down slightingly upon anyone."}, {"t": "sub", "x": "2. A share in Mary's faith"}, {"t": "p", "x": "214. Mary will share her faith with you. Her faith on earth was stronger than that of all the patriarchs, prophets, apostles and saints."}, {"t": "sub", "x": "3. The gift of pure love"}, {"t": "p", "x": "215. The Mother of fair love will rid your heart of all scruples and inordinate servile fear."}, {"t": "sub", "x": "4. Great confidence in God and in Mary"}, {"t": "p", "x": "216. Our Blessed Lady will fill you with unbounded confidence in God and in herself: 1) Because you will no longer approach Jesus by yourself but always through Mary, your loving Mother."}, {"t": "sub", "x": "5. Communication of the spirit of Mary"}, {"t": "p", "x": "217. The soul of Mary will be communicated to you to glorify the Lord. Her spirit will take the place of yours to rejoice in God, her Saviour, but only if you are faithful to the practices of this devotion."}, {"t": "sub", "x": "6. Transformation into the likeness of Jesus"}, {"t": "p", "x": "218. If Mary, the Tree of Life, is well cultivated in our soul by fidelity to this devotion, she will in due time bring forth her fruit which is none other than Jesus."}, {"t": "sub", "x": "7. The greater glory of Christ"}, {"t": "p", "x": "222. If you live this devotion sincerely, you will give more glory to Jesus in a month than in many years of a more demanding devotion."}]}, {"n": 26, "blocks": [{"t": "src", "x": "From True Devotion To the Blessed Virgin Mary, Nos. 12-38"}, {"t": "p", "x": "\"If you wish to understand the Mother,\" says a saint, \"then understand the Son. She is a worthy Mother of God.\" Hic taceat omnis lingua : Here let every tongue be silent. My heart has dictated with special joy all that I have written to show that Mary has been unknown up till now, and that that is one of the reasons why Jesus Christ is not known as he should be. If then, as is certain, the knowledge and the kingdom of Jesus Christ must come into the world, it can only be as a necessary consequence of the knowledge and reign of Mary. She who first gave him to the world will establish his kingdom in the world."}, {"t": "p", "x": "With the whole Church I acknowledge that Mary, being a mere creature fashioned by the hands of God is, compared to his infinite majesty, less than an atom, or rather is simply nothing, since he alone can say, \"I am he who is\". Consequently, this great Lord, who is ever independent and self-sufficient, never had and does not now have any absolute need of the Blessed Virgin for the accomplishment of his will and the manifestation of his glory. To do all things he has only to will them. However, I declare that, considering things as they are, because God has decided to begin and accomplish his greatest works through the Blessed Virgin ever since he created her, we can safely believe that he will not change his plan in the time to come, for he is God and therefore does not change in his thoughts or his way of acting."}, {"t": "p", "x": "Mary is the Queen of heaven and earth by grace as Jesus is king by nature and by conquest. But as the kingdom of Jesus Christ exists primarily in the heart or interior of man, according to the words of the Gospel, \"The kingdom of God is within you\", so the kingdom of the Blessed Virgin is principally in the interior of man, that is, in his soul. It is principally in souls that she is glorified with her Son more than in any visible creature. So we may call her, as the saints do, Queen of our hearts."}]}, {"n": 27, "blocks": [{"t": "p", "x": "During this period we shall apply ourselves to the study of Jesus Christ. What is to be studied in Christ? First the God-Man, His grace and glory; then His rights to sovereign dominion over us; since, after having renounced Satan and the world, we have taken Jesus Christ for our Lord. What next shall be the object of our study? His exterior actions and also His interior life; namely, the virtues and acts of His Sacred Heart; His association with Mary in the mysteries of the Annunciation and Incarnation, during His infancy and hidden life, at the feast of Cana and on Calvary."}, {"t": "src", "x": "From True Devotion To the Blessed Virgin Mary, Nos. 61-62"}, {"t": "p", "x": "61. Jesus, our Saviour, true God and true man must be the ultimate end of all our other devotions; otherwise they would be false and misleading. He is the Alpha and the Omega, the beginning and end of everything. \"We labour,\" says St. Paul, \"only to make all men perfect in Jesus Christ.\" For in him alone dwells the entire fullness of the divinity and the complete fullness of grace, virtue and perfection. In him alone we have been blessed with every spiritual blessing; he is the only teacher from whom we must learn; the only Lord on whom we should depend; the only Head to whom we should be united and the only model that we should imitate. He is the only Physician that can heal us; the only Shepherd that can feed us; the only Way that can lead us; the only Truth that we can believe; the only Life that can animate us. He alone is everything to us and he alone can satisfy all our desires. We are given no other name under heaven by which we can be saved. God has laid no other foundation for our salvation, perfection and glory than Jesus. Every edifice which is not built on that firm rock, is founded upon shifting sands and will certainly fall sooner or later. Through him, with him and in him, we can do all things and render all honour and glory to the Father in the unity of the Holy Spirit; we can make ourselves perfect and be for our neighbour a fragrance of eternal life."}, {"t": "p", "x": "62. If then we are establishing sound devotion to our Blessed Lady, it is only in order to establish devotion to our Lord more perfectly, by providing a smooth but certain way of reaching Jesus Christ. If devotion to our Lady distracted us from our Lord, we would have to reject it as an illusion of the devil. But this is far from being the case. As I have already shown and will show again later on, this devotion is necessary, simply and solely because it is a way of reaching Jesus perfectly, loving him tenderly, and serving him faithfully."}]}, {"n": 28, "blocks": [{"t": "src", "x": "Matthew 26:1, 26-29, 36-46"}, {"t": "p", "x": "And it came to pass, when Jesus had ended all these words, he said to his disciples: You know that after two days shall be the pasch, and the son of man shall be delivered up to be crucified..."}, {"t": "p", "x": "...And whilst they were at supper, Jesus took bread, and blessed, and broke: and gave to his disciples, and said: Take ye, and eat. This is my body. And taking the chalice, he gave thanks, and gave to them, saying: Drink ye all of this. For this is my blood of the new testament, which shall be shed for many unto remission of sins. And I say to you, I will not drink from henceforth of this fruit of the vine, until that day when I shall drink it with you new in the kingdom of my Father..."}, {"t": "p", "x": "...Then Jesus came with them into a country place which is called Gethsemani; and he said to his disciples: Sit you here, till I go yonder and pray. And taking with him Peter and the two sons of Zebedee, he began to grow sorrowful and to be sad. Then he saith to them: My soul is sorrowful even unto death: stay you here, and watch with me. And going a little further, he fell upon his face, praying, and saying: My Father, if it be possible, let this chalice pass from me. Nevertheless not as I will, but as thou wilt. And he cometh to his disciples, and findeth them asleep, and he saith to Peter: What? Could you not watch one hour with me? Watch ye, and pray that ye enter not into temptation. The spirit indeed is willing, but the flesh weak. Again the second time, he went and prayed, saying: My Father, if this chalice may not pass away, but I must drink it, thy will be done. And he cometh again and findeth them sleeping: for their eyes were heavy. And leaving them, he went again: and he prayed the third time, saying the selfsame word. Then he cometh to his disciples, and saith to them: Sleep ye now and take your rest; behold the hour is at hand, and the Son of man shall be betrayed into the hands of sinners. Rise, let us go: behold he is at hand that will betray me."}]}, {"n": 29, "blocks": [{"t": "src", "x": "Imitation of Christ, by Thomas á Kempis: Book 1, Chapter 1"}, {"t": "sub", "x": "Of the Imitation of Christ, and Contempt of all the Vanities of the World"}, {"t": "p", "x": "He that followeth Me, walketh not in darkness (John 8:12), saith the Lord. These are the words of Christ, by which we are admonished, how we ought to imitate His life and manners, if we would truly be enlightened, and delivered from all blindness of heart. Let therefore our chiefest endeavour be, to meditate upon the life of Jesus Christ."}, {"t": "p", "x": "The doctrine of Christ exceedeth all the doctrine of holy men.; and he that hath the Spirit will find therein the hidden manna (Apocalypse. 2:17). But it falleth out that many who often hear the Gospel of Christ, feel little desire after it, because they have not the Spirit of Christ (Rom. 8:9). But Whosoever will fully and with relish understand the words of Christ, must endeavor to conform his life wholly to the life of Christ."}, {"t": "p", "x": "2. What doth it avail thee to discourse profoundly of the Trinity, if thou be void of humility, and art thereby displeasing to the Trinity? Surely profound words do not make a man holy and just; but a virtuous life maketh him dear to God. I had rather feel contrition, than know the definition thereof. If thou didst know the whole Bible by heart, and the sayings of all the philosophers, what would all that profit thee without the love of God (1 Cor. 13:2), and without His grace?"}, {"t": "p", "x": "Vanity of vanities, and all is vanity (Eccles. 1:2), except to love God, and to serve Him only. This is the highest wisdom, by contempt of the world to press forward towards heavenly kingdoms."}]}, {"n": 30, "blocks": [{"t": "src", "x": "Matthew 27:36-44"}, {"t": "p", "x": "And they sat and watched him. And they put over his head his cause written: THIS IS JESUS THE KING OF THE JEWS. Then were crucified with him two thieves: one on the right hand, and one on the left. And they that passed by, blasphemed him, wagging their heads, And saying: Vah, thou that destroyest the temple of God, and in three days dost rebuild it: save thy own self: if thou be the Son of God, come down from the cross. In like manner also the chief priests, with the scribes and ancients, mocking, said: He saved others; himself he cannot save. If he be the king of Israel, let him now come down from the cross, and we will believe him. He trusted in God; let him now deliver him if he will have him; for he said: I am the Son of God. And the selfsame thing the thieves also, that were crucified with him, reproached him with."}, {"t": "src", "x": "Imitation of Christ, by Thomas á Kempis: Book 2, Chapter 12"}, {"t": "sub", "x": "Of the King's High Way of the Holy Cross"}, {"t": "p", "x": "Unto many this seemeth an hard saying, \"Deny thyself, take up thy cross, and follow Jesus\" (Matt. 16:24). But much harder will it be to hear that last word, \"Depart from Me, ye cursed, into everlasting fire\" (Matt. 25:41). For they who now willingly hear and follow the word of the Cross, shall not then fear (Psalm 112:7) to hear the sentence of everlasting damnation. This sign of the Cross shall be in the heaven, when the Lord shall come to judgment (Matt. 24:30). Then all the servants of the Cross, who in their life-time conformed themselves unto Christ crucified, shall draw near unto Christ the Judge with great confidence."}, {"t": "p", "x": "Why therefore fearest thou to take up the Cross which leadeth thee to a kingdom? In the Cross is salvation, in the Cross is life, in the Cross is protection against our enemies, in the Cross is infusion of heavenly sweetness, in the Cross is strength of mind, in the Cross joy of spirit, in the Cross the height of virtue, in the Cross the perfection of holiness."}, {"t": "p", "x": "Take up therefore thy Cross and follow Jesus (Luke 14:27), and thou shalt go into life everlasting."}]}, {"n": 31, "blocks": [{"t": "src", "x": "Imitation of Christ, by Thomas á Kempis: Book 4, Chapter 2"}, {"t": "sub", "x": "That the Great Goodness and Love of God Is Exhibited to Man in This Sacrament"}, {"t": "p", "x": "In confidence of Thy goodness and great mercy, O Lord, I draw near, sick to the Healer, hungry and thirsty to the Fountain of life, needy to the King of Heaven, a servant to his Lord, a creature to the Creator, desolate to my own tender Comforter. \"But whence is this to me,\" that Thou comest unto me (Luke 1:43)? What am I, that Thou shouldest grant me Thine own self? how dare a sinner appear before Thee?"}, {"t": "p", "x": "And how is it that Thou dost vouchsafe to come unto a sinner? Thou knowest Thy servant, and art well aware that he hath in him no good thing, for which Thou shouldest grant him this. I confess therefore mine own vileness, I acknowledge Thy goodness, I praise Thy tender mercy, and give Thee thanks for Thy transcendent love."}, {"t": "src", "x": "From True Devotion To the Blessed Virgin Mary, Nos. 243-254"}, {"t": "p", "x": "243. Loving slaves of Jesus in Mary should hold in high esteem devotion to Jesus, the Word of God, in the great mystery of the Incarnation, March 25th, which is the mystery proper to this devotion, because it was inspired by the Holy Spirit for the following reasons: a) That we might honour and imitate the wondrous dependence which God the Son chose to have on Mary, for the glory of his Father and for the redemption of man. This dependence is revealed especially in this mystery where Jesus becomes a captive and slave in the womb of his Blessed Mother, depending on her for everything. b) That we might thank God for the incomparable graces he has conferred upon Mary and especially that of choosing her to be his most worthy Mother. This choice was made in the mystery of the incarnation. These are the two principal ends of the slavery of Jesus in Mary."}, {"t": "p", "x": "245. a) Since we live in an age of pride when a great number of haughty scholars, with proud and critical minds, find fault even with long-established and sound devotions, it is better to speak of \"slavery of Jesus in Mary\" and to call oneself \"slave of Jesus\" rather than \"slave of Mary\". We then avoid giving any pretext for criticism. In this way, we name this devotion after its ultimate end which is Jesus, rather than after the way and the means to arrive there, which is Mary. However, we can very well use either term without any scruple, as I myself do."}, {"t": "p", "x": "246. b) Since the principal mystery celebrated and honoured in this devotion is the mystery of the Incarnation where we find Jesus only in Mary, having become incarnate in her womb, it is appropriate for us to say, \"slavery of Jesus in Mary\", of Jesus dwelling enthroned in Mary, according to the beautiful prayer, recited by so many great souls, \"O Jesus living in Mary\"."}, {"t": "p", "x": "249. Those who accept this devotion should have a great love for the Hail Mary, or, as it is called, the Angelic Salutation. Few Christians, however enlightened, understand the value, merit, excellence and necessity of the Hail Mary. Our Blessed Lady herself had to appear on several occasions to men of great holiness and insight, such as St. Dominic, St. John Capistran and Blessed Alan de Rupe, to convince them of the richness of this prayer."}]}, {"n": 32, "blocks": [{"t": "src", "x": "Imitation of Christ, by Thomas á Kempis: Book 2, Chapter 7"}, {"t": "sub", "x": "Of the Love of Jesus above All Things"}, {"t": "p", "x": "Blessed is he that understandeth (Psalm 119:1,2) what it is to love Jesus, and to despise himself for Jesus' sake. Thou oughtest to leave thy beloved, for thy beloved (Deut. 6:5; Matt. 22:37; Cant. 2:16); for that Jesus will be loved alone above all things."}, {"t": "p", "x": "The love of things created is deceitful and inconstant; the love of Jesus is faithful and persevering. He that cleaveth unto a creature, shall fall with that which is subject to fall; he that embraceth Jesus shall be made strong for ever."}, {"t": "p", "x": "2. Love Him, and keep Him for thy friend, who, when all go away, will not forsake thee, nor suffer thee to perish in the end. Some time or other thou must be separated from all, whether thou wilt or no. Keep close to Jesus both in life and in death, and commit thyself unto His faithfulness, who, when all fail, can alone help thee."}, {"t": "p", "x": "Thy Beloved is of that nature, that He will admit of no rival; but will have thy heart alone, and sit on His throne as King. If thou couldest empty thyself perfectly from all creatures, Jesus would willingly dwell with thee."}, {"t": "src", "x": "From True Devotion To the Blessed Virgin Mary, Nos. 257-260"}, {"t": "p", "x": "There are some very sanctifying interior practices for those souls who feel called by the Holy Spirit to a high degree of perfection. They may be expressed in four words, doing everything through Mary, with Mary, in Mary, and for Mary, in order to do it more perfectly through Jesus, with Jesus, in Jesus, and for Jesus."}, {"t": "sub", "x": "Through Mary"}, {"t": "p", "x": "258. We must do everything through Mary, that is, we must obey her always and be led in all things by her spirit, which is the Holy Spirit of God. \"Those who are led by the Spirit of God are children of God,\" says St. Paul. Those who are led by the spirit of Mary are children of Mary, and, consequently children of God, as we have already shown. Among the many servants of Mary only those who are truly and faithfully devoted to her are led by her spirit. I have said that the spirit of Mary is the spirit of God because she was never led by her own spirit, but always by the spirit of God, who made himself master of her to such an extent that he became her very spirit. That is why St. Ambrose says, \"May the soul of Mary be in each one of us to glorify the Lord. May the spirit of Mary be in each one of us to rejoice in God.\" Happy is the man who follows the example of the good Jesuit Brother Rodriguez, who died a holy death, because he will be completely possessed and governed by the spirit of Mary, a spirit which is gentle yet strong, zealous yet prudent, humble yet courageous, pure yet fruitful."}, {"t": "sub", "x": "With Mary"}, {"t": "p", "x": "260. We must do everything with Mary, that is to say, in all our actions we must look upon Mary, although a simple human being, as the perfect model of every virtue and perfection, fashioned by the Holy Spirit for us to imitate, as far as our limited capacity allows. In every action then we should consider how Mary performed it or how she would perform it if she were in our place. For this reason, we must examine and meditate on the great virtues she practised during her life, especially: 1) Her lively faith, by which she believed the angel's word without the least hesitation, and believed faithfully and constantly even to the foot of the Cross on Calvary. 2) Her deep humility, which made her prefer seclusion, maintain silence, submit to every eventuality and put herself in the last place."}]}, {"n": 33, "blocks": [{"t": "src", "x": "Imitation of Christ, by Thomas á Kempis: Book 4, Chapter 11"}, {"t": "sub", "x": "That the Blood of Christ and the Holy Scriptures Are Most Necessary unto a Faithful Soul"}, {"t": "p", "x": "O most sweet Lord Jesus, how great is the pleasure of the devout soul that feasteth with Thee in Thy banquet; where there is set for her no other food to be eaten but Thyself, her only Beloved, and most to be desired above all the desires of her heart! To me also it would be indeed sweet, in Thy presence to pour forth tears from the very bottom of my heart, and with the grateful Magdalene to wash Thy feet with tears (Luke 7:38). But where is that devotion? Where that bountiful flowing of holy tears? Surely in the sight of Thee and Thy holy Angels, my whole heart ought to burn, and to weep for joy. For in this Sacrament I have Thee mystically present, hidden under another shape. For to look upon Thee in Thine own Divine brightness, mine eyes would not be able to endure; nor could even the whole world stand in the splendor of the glory of Thy majesty. Herein then Thou hast regard to my weakness, that Thou dost hide Thyself under this Sacrament."}, {"t": "src", "x": "From True Devotion To the Blessed Virgin Mary, Nos. 261-265"}, {"t": "sub", "x": "In Mary"}, {"t": "p", "x": "261. We must do everything in Mary. To understand this we must realise that the Blessed Virgin is the true earthly paradise of the new Adam and that the ancient paradise was only a symbol of her. There are in this earthly paradise untold riches, beauties, rarities and delights, which the new Adam, Jesus Christ, has left there. It is in this paradise that he \"took his delights\" for nine months, worked his wonders and displayed his riches with the magnificence of God himself.In this earthly paradise grows the real Tree of Life which bore our Lord, the fruit of Life, the tree of knowledge of good and evil, which bore the Light of the world. In this divine place there are trees planted by the hand of God and watered by his divine unction which have borne and continue to bear fruit that is pleasing to him. Only the Holy Spirit can teach us the truths that these material objects symbolise. 262. The Holy Spirit speaking through the Fathers of the Church, also calls our Lady the Eastern Gate, through which the High Priest, Jesus Christ, enters and goes out into the world. Through this gate he entered the world the first time and through this same gate he will come the second time."}, {"t": "sub", "x": "For Mary"}, {"t": "p", "x": "265. Finally, we must do everything for Mary. We take Mary for our proximate end, our mysterious intermediary and the easiest way of reaching him. Relying on her protection, we should undertake and carry out great things for our noble Queen. We must defend her privileges when they are questioned and uphold her good name when it is under attack. We must attract everyone, if possible, to her service and to this true and sound devotion. As a reward for these little services, we should expect nothing in return save the honour of belonging to such a lovable Queen and the joy of being united through her to Jesus, her Son, by a bond that is indissoluble in time and in eternity."}]}];
+const PRAYERS = {
+ "veni": "Come, Holy Spirit, Creator blest,\nand in our souls take up Thy rest;\ncome with Thy grace and heavenly aid\nto fill the hearts which Thou hast made.\n\nO comforter, to Thee we cry,\nO heavenly gift of God Most High,\nO fount of life and fire of love,\nand sweet anointing from above.\n\nThou in Thy sevenfold gifts are known;\nThou, finger of God's hand we own;\nThou, promise of the Father,\nThou Who dost the tongue with power imbue.\n\nKindle our sense from above,\nand make our hearts o'erflow with love;\nwith patience firm and virtue high\nthe weakness of our flesh supply.\n\nFar from us drive the foe we dread,\nand grant us Thy peace instead;\nso shall we not, with Thee for guide,\nturn from the path of life aside.\n\nOh, may Thy grace on us bestow\nthe Father and the Son to know;\nand Thee, through endless times confessed,\nof both the eternal Spirit blest.\n\nNow to the Father and the Son,\nWho rose from death, be glory given,\nwith Thou, O Holy Comforter,\nhenceforth by all in earth and heaven. Amen.",
+ "ave": "Hail, O Star of the ocean,\nGod's own Mother blest,\never sinless Virgin,\ngate of heav'nly rest.\n\nTaking that sweet Ave,\nwhich from Gabriel came,\npeace confirm within us,\nchanging Eve's name.\n\nBreak the sinners' fetters,\nmake our blindness day,\nChase all evils from us,\nfor all blessings pray.\n\nShow thyself a Mother,\nmay the Word divine\nborn for us thine Infant\nhear our prayers through thine.\n\nVirgin all excelling,\nmildest of the mild,\nfree from guilt preserve us\nmeek and undefiled.\n\nKeep our life all spotless,\nmake our way secure\ntill we find in Jesus,\njoy for evermore.\n\nPraise to God the Father,\nhonor to the Son,\nin the Holy Spirit,\nbe the glory one. Amen.",
+ "magnificat": "My soul doth magnify the Lord. And my spirit hath rejoiced in God my Savior. Because He hath regarded the humility of His handmaid; for behold, from henceforth all generations shall call me blessed. Because He that is mighty hath done great things to me; and holy is His name. And His mercy is from generation to generations, to them that fear Him. He hath showed might in His arm; He hath scattered the proud in the conceit of their heart.\n\nHe hath put down the mighty from their seat; and hath exalted the humble. He hath filled the hungry with good things; and the rich he hath sent empty away. He hath received Israel His servant, being mindful of His mercy. As He spoke to our fathers, to Abraham and to his seed forever. Amen.",
+ "glory": "Glory be to the Father, and to the Son, and to the Holy Ghost. As it was in the beginning, is now, and ever shall be, world without end. Amen.",
+ "litany-holy-ghost": "Lord, have mercy on us.\nChrist, have mercy on us.\nLord, have mercy on us.\n\nFather all powerful, have mercy on us\nJesus, Eternal Son of the Father, Redeemer of the world, save us.\nSpirit of the Father and the Son, boundless life of both, sanctify us.\nHoly Trinity, hear us\n\nHoly Ghost, Who proceedest from the Father and the Son, enter our hearts.\nHoly Ghost, Who art equal to the Father and the Son, enter our hearts.\n\nPromise of God the Father, have mercy on us.\nRay of heavenly light, have mercy on us\nAuthor of all good, have mercy on us\nSource of heavenly water, have mercy on us\nConsuming fire, have mercy on us\nArdent charity, have mercy on us\nSpiritual unction, have mercy on us\nSpirit of love and truth, have mercy on us\nSpirit of wisdom and understanding, have mercy on us\nSpirit of counsel and fortitude, have mercy on us\nSpirit of knowledge and piety, have mercy on us\nSpirit of the fear of the Lord, have mercy on us\nSpirit of grace and prayer, have mercy on us\nSpirit of peace and meekness, have mercy on us\nSpirit of modesty and innocence, have mercy on us\nHoly Ghost, the Comforter, have mercy on us\nHoly Ghost, the Sanctifier, have mercy on us\nHoly Ghost, Who governest the Church, have mercy on us\nGift of God, the Most High, have mercy on us\nSpirit Who fillest the universe, have mercy on us\nSpirit of the adoption of the children of God, have mercy on us\n\nHoly Ghost, inspire us with horror of sin.\nHoly Ghost, come and renew the face of the earth.\nHoly Ghost, shed Thy light in our souls.\nHoly Ghost, engrave Thy law in our hearts\nHoly Ghost, inflame us with the flame of Thy love.\nHoly Ghost, open to us the treasures of Thy graces\nHoly Ghost, teach us to pray well.\nHoly Ghost, enlighten us with Thy heavenly inspirations.\nHoly Ghost, lead us in the way of salvation\nHoly Ghost, grant us the only necessary knowledge.\nHoly Ghost, inspire in us the practice of good.\nHoly Ghost, grant us the merits of all virtues.\nHoly Ghost, make us persevere in justice.\nHoly Ghost, be Thou our everlasting reward.\n\nLamb of God, Who takest away the sins of the world, Send us Thy Holy Ghost.\n\nLamb of God, Who takest away the sins of the world, pour down into our souls the gifts of the Holy Ghost.\n\nLamb of God, Who takest away the sins of the world, grant us the Spirit of wisdom and piety.\n\nV. Come, Holy Ghost! Fill the hearts of Thy faithful,\nR. And enkindle in them the fire of Thy love.\n\nLet Us Pray. Grant, O merciful Father, that Thy Divine Spirit may enlighten, inflame and purify us, that He may penetrate us with His heavenly dew and make us fruitful in good works, through Our Lord Jesus Christ, Thy Son, Who with Thee, in the unity of the same Spirit, liveth and reigneth forever and ever.\n\nR. Amen.",
+ "litany-loreto": "Lord, have mercy on us,\nChrist have mercy on us.\nLord, have mercy on us.\nChrist hear us.\nChrist, graciously hear us.\n\nGod the Father of Heaven, have mercy on us.\nGod the Son, Redeemer of the world, have mercy on us\nGod the Holy Ghost, have mercy on us.\nHoly Trinity, One God, have mercy on us.\n\nHoly Mary, pray for us\nHoly Mother of God, pray for us.\nHoly Virgin of virgins, pray for us.\nMother of Christ, pray for us.\nMother of divine grace, pray for us.\nMother most pure, pray for us.\nMother most chaste, pray for us.\nMother inviolate, pray for us.\nMother undefiled, pray for us.\nMother most amiable, pray for us.\nMother most admirable, pray for us.\nMother of good counsel, pray for us.\nMother of our Creator, pray for us.\nMother of our Saviour, pray for us.\nMother of the Church, pray for us.\nVirgin most prudent, pray for us.\nVirgin most venerable, pray for us.\nVirgin most renowned, pray for us.\nVirgin most powerful, pray for us.\nVirgin most merciful, pray for us.\nVirgin most faithful, pray for us.\nPreparation for Consecration, pray for us.\nMirror of justice, pray for us.\nSeat of wisdom, pray for us.\nCause of our joy, pray for us.\n\nVessel of honor, pray for us.\nSingular vessel of devotion, pray for us.\nMystical rose, pray for us.\nTower of David, pray for us.\nTower of ivory, pray for us.\nHouse of gold, pray for us.\nArk of the covenant, pray for us.\nGate of Heaven, pray for us.\nMorning star, pray for us.\nHealth of the sick, pray for us.\nRefuge of sinners, pray for us.\nComforter of the afflicted, pray for us.\nHelp of Christians, pray for us.\nQueen of angels, pray for us.\nQueen of patriarchs, pray for us.\nQueen of prophets, pray for us.\nQueen of Apostles, pray for us.\nQueen of martyrs, pray for us.\nQueen of confessors, pray for us.\nQueen of virgins, pray for us.\nQueen of all saints, pray for us.\nQueen conceived without Original Sin, pray for us.\nQueen assumed into Heaven, pray for us.\nQueen of the most holy Rosary, pray for us.\nQueen of peace, pray for us.\n\nLamb of God, Who takest away the sins of the world, Spare us, O Lord.\nLamb of God, Who takest away the sins of the world, Graciously hear us, O Lord.\nLamb of God, Who takest away the sins of the world, Have mercy on us.\n\nV. Pray for us, O holy Mother of God,\nR. That we may be made worthy of the promises of Christ.\n\nLet Us Pray. Grant, we beseech Thee, O Lord God, unto us Thy servants, that we may rejoice in continual health of mind and body, and by the glorious intercession of Blessed Mary, ever virgin, may be delivered from present sadness, and enter into the joy of Thine eternal gladness. Through Christ Our Lord.\n\nR. Amen",
+ "montfort-prayer": "Hail Mary, beloved Daughter of the Eternal Father! Hail Mary, admirable Mother of the Son! Hail Mary, faithful spouse of the Holy Ghost! Hail Mary, my dear Mother, my loving Mistress, my powerful sovereign! Hail my joy, my glory, my heart and my soul! Thou art all mine by mercy, and I am all thine by justice. But I am not yet sufficiently thine. I now give myself wholly to thee without keeping anything back for myself or others. If thou still seest in me anything which does not belong to thee, I beseech thee to take it and to make thyself the absolute Mistress of all that is mine. Destroy in me all that may be displeasing to God, root it up and bring it to nought; place and cultivate in me everything that is pleasing to thee.\n\nMay the light of thy faith dispel the darkness of my mind; may thy profound humility take the place of my pride; may thy sublime contemplation check the distractions of my wandering imagination; may thy continuous sight of God fill my memory with His presence; may the burning love of thy heart inflame the lukewarmness of mine; may thy virtues take the place of my sins; may thy merits be my only adornment in the sight of God and make up for all that is wanting in me. Finally, dearly beloved Mother, grant, if it be possible, that I may have no other spirit but thine to know Jesus and His divine will; that I may have no other soul but thine to praise and glorify the Lord; that I may have no other heart but thine to love God with a love as pure and ardent as thine I do not ask thee for visions, revelations, sensible devotion or spiritual pleasures. It is thy privilege to see God clearly; it is thy privilege to enjoy heavenly bliss; it is thy privilege to triumph gloriously in Heaven at the right hand of thy Son and to hold absolute sway over angels, men and demons; it is thy privilege to dispose of all the gifts of God, just as thou willest.\n\nSuch is, O heavenly Mary, the \"best part,\" which the Lord has given thee and which shall never be taken away from thee—and this thought fills my heart with joy. As for my part here below, I wish for no other than that which was thine: to believe sincerely without spiritual pleasures; to suffer joyfully without human consolation; to die continually to myself without respite; and to work zealously and unselfishly for thee until death as the humblest of thy servants. The only grace I beg thee to obtain for me is that every day and every moment of my life I may say: Amen, so be it, to all that thou didst do while on earth; Amen, so be it, to all that thou art now doing in Heaven; Amen, so be it, to all that thou art doing in my soul, so that thou alone mayest fully glorify Jesus in me for time and eternity. Amen.",
+ "rosary": "",
+ "litany-holy-name": "Lord, have mercy on us.\nChrist, have mercy on us.\nLord, have mercy on us.\nJesus, hear us.\nJesus, graciously hear us.\n\nGod the Father of Heaven, have mercy on us.\nGod the Son, Redeemer of the world, have mercy on us.\nGod the Holy Ghost, have mercy on us.\nHoly Trinity, One God, have mercy on us.\nJesus, Son of the living God, have mercy on us.\nJesus, splendor of the Father, have mercy on us.\nJesus, brightness of eternal light, have mercy on us.\nJesus, King of glory, have mercy on us.\nJesus, sun of justice, have mercy on us.\nJesus, Son of the Virgin Mary, have mercy on us.\nJesus, most amiable, have mercy on us.\nJesus, most admirable, have mercy on us.\nJesus, mighty God, have mercy on us.\nJesus, Father of the world to come, have mercy on us.\nJesus, angel of great counsel, have mercy on us.\nJesus, most powerful, have mercy on us.\nJesus, most patient, have mercy on us.\nJesus, most obedient, have mercy on us.\nJesus, meek and humble, have mercy on us.\nJesus, lover of chastity, have mercy on us.\nJesus, lover of us, have mercy on us.\nJesus, God of peace, have mercy on us.\nJesus, author of life, have mercy on us.\nJesus, model of virtues, have mercy on us.\nJesus, lover of souls, have mercy on us.\nJesus, our God, have mercy on us.\nJesus, our refuge, have mercy on us.\nJesus, Father of the poor, have mercy on us.\nJesus, treasure of the faithful, have mercy on us.\nJesus, Good Shepherd, have mercy on us.\nJesus, true light, have mercy on us.\nJesus, eternal wisdom, have mercy on us.\nJesus, infinite goodness, have mercy on us.\nJesus, our way and our life, have mercy on us.\nJesus, joy of angels, have mercy on us.\nJesus, King of patriarchs, have mercy on us.\nJesus, master of Apostles, have mercy on us.\nJesus, teacher of Evangelists, have mercy on us.\nJesus, strength of martyrs, have mercy on us.\nJesus, light of confessors, have mercy on us.\nJesus, purity of virgins, have mercy on us.\nJesus, crown of all saints, have mercy on us.\n\nBe merciful, spare us, O Jesus.\nBe merciful, graciously hear us, O Jesus.\n\nFrom all evil, Jesus, deliver us.\nFrom all sin, Jesus, deliver us.\nFrom Thy wrath, Jesus, deliver us.\nFrom the snares of the devil, Jesus, deliver us.\nFrom the spirit of fornication, Jesus, deliver us.\nFrom everlasting death, Jesus, deliver us.\nFrom the neglect of Thine inspirations, Jesus, deliver us.\n\nThrough the mystery of Thy holy Incarnation, Jesus, deliver us.\nThrough Thy nativity, Jesus, deliver us.\nThrough Thine infancy, Jesus, deliver us.\nThrough Thy most divine life, Jesus, deliver us.\nThrough Thy labors, Jesus, deliver us.\nThrough Thine agony and Passion, Jesus, deliver us.\nThrough Thy cross and dereliction, Jesus, deliver us.\nThrough Thy sufferings, Jesus, deliver us.\nThrough Thy death and burial, Jesus, deliver us.\nThrough Thy Resurrection, Jesus, deliver us.\nThrough Thine Ascension, Jesus, deliver us.\nThrough Thine institution of the most Holy Eucharist, Jesus, deliver us.\nThrough Thy joys, Jesus, deliver us.\nThrough Thy glory, Jesus, deliver us.\n\nLamb of God, Who takest away the sins of the world, Spare us, O Jesus.\nLamb of God, Who takest away the sins of the world, Graciously hear us, O Jesus.\nLamb of God, Who takest away the sins of the world, Have mercy on us.\n\nJesus, hear us, Jesus, graciously hear us.\n\nLet Us Pray. O Lord Jesus Christ, Who hast said: Ask and ye shall receive, seek and ye shall find, knock and it shall be opened unto you; grant, we beseech Thee, to us who ask the gift of Thy divine love, that we may ever love Thee with all our hearts, and in all our words and actions, and never cease from praising Thee.\n\nGive us, O Lord, a perpetual fear and love of Thy holy Name; for Thou never failest to govern those whom Thou dost solidly establish in Thy love, Who livest and reignest world without end.\n\nR. Amen.",
+ "o-jesus": "O Jesus living in Mary,\nCome and live in Thy servants,\nIn the spirit of Thy holiness,\nIn the fullness of Thy might,\nIn the truth of Thy virtues,\nIn the perfection of Thy ways,\nIn the communion of Thy mysteries;\nSubdue every hostile power\nIn Thy spirit, for the glory of the Father. Amen."
+};
+const CONS = ["On the day of consecration, either fast, give alms, or offer a votive candle for the good of another (or all of the above); do some spiritual penance and approach consecration in the spirit of mortification.", "Now go to Confession (or, if that is not possible, go during the 8 days prior) and then receive Communion with the intention of giving yourself to Jesus, as a slave of love, by the hands of Mary. Try to receive Communion per the method described in the Supplement of the book, \"True Devotion to the Blessed Virgin Mary\" above.", "Now pray the words of the consecration. Copy them and have them with you at church, read them after the Mass (in front of the tabernacle would be nice), and sign your copy of the Act of Consecration.", "The words of consecration are:", "O Eternal and incarnate Wisdom! O sweetest and most adorable Jesus! True God and true man, only Son of the Eternal Father, and of Mary, always virgin! I adore Thee profoundly in the bosom and splendors of Thy Father during eternity; and I adore Thee also in the virginal bosom of Mary, Thy most worthy Mother, in the time of Thine incarnation.", "I give Thee thanks for that Thou hast annihilated Thyself, taking the form of a slave in order to rescue me from the cruel slavery of the devil. I praise and glorify Thee for that Thou hast been pleased to submit Thyself to Mary, Thy holy Mother, in all things, in order to make me Thy faithful slave through her. But, alas! Ungrateful and faithless as I have been, I have not kept the promises which I made so solemnly to Thee in my Baptism; I have not fulfilled my obligations; I do not deserve to be called Thy child, nor yet Thy slave; and as there is nothing in me which does not merit Thine anger and Thy repulse, I dare not come by myself before Thy most holy and august Majesty. It is on this account that I have recourse to the intercession of Thy most holy Mother, whom Thou hast given me for a mediatrix with Thee. It is through her that I hope to obtain of Thee contrition, the pardon of my sins, and the acquisition and preservation of wisdom.", "Hail, then, O immaculate Mary, living tabernacle of the Divinity, where the Eternal Wisdom willed to be hidden and to be adored by angels and by men! Hail, O Queen of Heaven and earth, to whose empire everything is subject which is under God. Hail, O sure refuge of sinners, whose mercy fails no one. Hear the desires which I have of the Divine Wisdom; and for that end receive the vows and offerings which in my lowliness I present to thee.", "I, N_____, a faithless sinner, renew and ratify today in thy hands the vows of my Baptism; I renounce forever Satan, his pomps and works; and I give myself entirely to Jesus Christ, the Incarnate Wisdom, to carry my cross after Him all the days of my life, and to be more faithful to Him than I have ever been before. In the presence of all the heavenly court I choose thee this day for my Mother and Mistress. I deliver and consecrate to thee, as thy slave, my body and soul, my goods, both interior and exterior, and even the value of all my good actions, past, present and future; leaving to thee the entire and full right of disposing of me, and all that belongs to me, without exception, according to thy good pleasure, for the greater glory of God in time and in eternity.", "Receive, O benignant Virgin, this little offering of my slavery, in honor of, and in union with, that subjection which the Eternal Wisdom deigned to have to thy maternity; in homage to the power which both of you have over this poor sinner, and in thanksgiving for the privileges with which the Holy Trinity has favored thee. I declare that I wish henceforth, as thy true slave, to seek thy honor and to obey thee in all things.", "O admirable Mother, present me to thy dear Son as His eternal slave, so that as He has redeemed me by thee, by thee He may receive me! O Mother of mercy, grant me the grace to obtain the true Wisdom of God; and for that end receive me among those whom thou lovest and teachest, whom thou leadest, nourishest and protectest as thy children and thy slaves.", "O faithful Virgin, make me in all things so perfect a disciple, imitator and slave of the Incarnate Wisdom, Jesus Christ thy Son, that I may attain, by thine intercession and by thine example, to the fullness of His age on earth and of His glory in Heaven. Amen.", "Sign your name here.", "Date", "After Consecration", "Once you have consecrated yourself to Jesus through Mary, live that consecration. St. Louis-Marie de Montfort recommended the following:", "•   Keep praying to develop a \"great contempt\" for the spirit of this world", "•   Maintain a special devotion to the Mystery of the Incarnation (e.g., through meditation; spiritual reading; focusing on Feasts centering around the Incarnation, such as the Annunciation and the Nativity, etc.)", "•   Frequently recite the Ave, Rosary, and the Magnificat", "•   Recite, every day if it is not inconvenient, the \"Little Crown of the Blessed Virgin\" -- a series of Paters, Aves, and Glorias -- one Ave for each star in the Virgin's Crown. St. Louis has a special way of praying the Little Crown, which is recommended.", "•   Do everything through, with, in and for Mary for the sake of Jesus, with the prayer, \"I am all thine Immaculate One, with all that I have: in time and in eternity\" in your heart and on your lips", "•   Associate yourself with Mary in a special way before, during, and after Communion (see Supplement of the book, \"True Devotion to the Blessed Virgin Mary\" above)", "•   Wear a little iron chain (around the neck, arm, waist, or ankle) as an outward sign and reminder of holy slavery. This practice is optional, but very recommended by St. Louis. The appearance of this chain is not further specified.", "•   Renew the consecration once a year on the same date chosen above, and by following the same 33-day period of exercises. If desired, also renew the consecration monthly with the prayer, \"I am all thine and all I have is thine, O dear Jesus, through Mary, Thy holy Mother.\"", "•   Optional: Join the Confraternity of Mary, Queen of All Hearts. Their address:", "Director, Confraternity of Mary Queen of All Hearts 26 South Saxon Avenue Bay Shore, NY 11706"];
+
+PRAYERS.rosary = null; // built below; the PDF names the Rosary but gives no text
+
+const PRAYER_NAMES = {
+  "veni": "Veni Creator",
+  "ave": "Ave Maris Stella",
+  "magnificat": "Magnificat",
+  "glory": "Glory Be",
+  "litany-holy-ghost": "Litany of the Holy Ghost",
+  "litany-loreto": "Litany of Loreto",
+  "montfort-prayer": "St. Louis de Montfort’s Prayer to Mary",
+  "rosary": "The Rosary (5 decades)",
+  "litany-holy-name": "Litany of the Holy Name of Jesus",
+  "o-jesus": "O Jesus Living in Mary"
+};
+const PRAYER_ORDER = ["veni", "ave", "magnificat", "glory", "litany-holy-ghost", "litany-loreto", "montfort-prayer", "rosary", "litany-holy-name", "o-jesus"];
+const HYMNS = new Set(["veni", "ave", "o-jesus"]);
+
+const PERIODS = [
+  { id: "prep", label: "12-Day Preparation", from: 1, to: 12,
+    focus: "Emptying yourself of the spirit of the world",
+    desc: "Penance and mortification: casting off the spirit of the world, which is contrary to that of Jesus Christ.",
+    prayers: ["veni", "ave", "magnificat", "glory"] },
+  { id: "w1", label: "First Week", from: 13, to: 19,
+    focus: "Knowledge of Self",
+    desc: "Coming to understand ourselves and our sins. Humility is the key.",
+    prayers: ["litany-holy-ghost", "litany-loreto", "ave"] },
+  { id: "w2", label: "Second Week", from: 20, to: 26,
+    focus: "Knowledge of the Blessed Virgin",
+    desc: "Asking the Holy Ghost to help us better understand the Blessed Virgin.",
+    prayers: ["litany-holy-ghost", "litany-loreto", "ave", "montfort-prayer", "rosary"] },
+  { id: "w3", label: "Third Week", from: 27, to: 33,
+    focus: "Knowledge of Jesus Christ",
+    desc: "Seeking to better understand Christ through meditation.",
+    prayers: ["litany-holy-ghost", "ave", "litany-holy-name", "montfort-prayer", "o-jesus"] }
+];
+
+const FEASTS = [
+  { k: "lourdes", name: "Our Lady of Lourdes", m: 2, d: 11 },
+  { k: "annunciation", name: "the Annunciation", m: 3, d: 25 },
+  { k: "carmel", name: "Our Lady of Mt. Carmel", m: 7, d: 16 },
+  { k: "assumption", name: "the Assumption", m: 8, d: 15 },
+  { k: "nativity", name: "Nativity of the Blessed Virgin Mary", m: 9, d: 8 },
+  { k: "sorrows", name: "Our Lady of Sorrows", m: 9, d: 15 },
+  { k: "presentation", name: "Presentation of the Blessed Virgin Mary", m: 11, d: 21 },
+  { k: "immaculate", name: "the Immaculate Conception", m: 12, d: 8 },
+  { k: "guadalupe", name: "Our Lady of Guadalupe", m: 12, d: 12 }
+];
+
+const MYSTERIES = {
+  Joyful: ["The Annunciation", "The Visitation", "The Nativity", "The Presentation in the Temple", "The Finding in the Temple"],
+  Sorrowful: ["The Agony in the Garden", "The Scourging at the Pillar", "The Crowning with Thorns", "The Carrying of the Cross", "The Crucifixion"],
+  Glorious: ["The Resurrection", "The Ascension", "The Descent of the Holy Spirit", "The Assumption", "The Coronation of Mary"],
+  Luminous: ["The Baptism of the Lord", "The Wedding at Cana", "The Proclamation of the Kingdom", "The Transfiguration", "The Institution of the Eucharist"]
+};
+const MYSTERY_BY_WEEKDAY = ["Glorious", "Joyful", "Sorrowful", "Glorious", "Luminous", "Sorrowful", "Joyful"];
+
+/* ---------- storage (per device, optional) ---------- */
+const KEY = "montfort-consecration-v1";
+const defaults = { feast: "immaculate", done: {}, said: {}, scale: 1, name: "", mode: "auto" };
+let state = Object.assign({}, defaults);
+try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s) state = Object.assign({}, defaults, s); } catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+/* ---------- dates ---------- */
+const MS = 86400000;
+function ymd(dt) { return Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate()); }
+function todayUTC() { return ymd(new Date()); }
+function fmt(utc, opts) { return new Date(utc).toLocaleDateString(undefined, Object.assign({ timeZone: "UTC" }, opts)); }
+function feastObj() { return FEASTS.find(f => f.k === state.feast) || FEASTS[7]; }
+function cycle(now) {
+  now = now == null ? todayUTC() : now;
+  const f = feastObj();
+  const y = new Date(now).getUTCFullYear();
+  let feast = Date.UTC(y, f.m - 1, f.d);
+  if (feast < now) feast = Date.UTC(y + 1, f.m - 1, f.d);
+  const start = feast - 33 * MS;
+  const day = Math.round((now - start) / MS) + 1; // 1..34, or <1 if not begun
+  return { feast, start, day, f };
+}
+function dateOfDay(n) { return cycle().start + (n - 1) * MS; }
+function periodOf(n) { return PERIODS.find(p => n >= p.from && n <= p.to); }
+
+/* ---------- helpers ---------- */
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const CHEV = '<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+const RESP = /^(.*?,\s*)((?:have mercy on us|pray for us|Jesus, deliver us|deliver us|save us|sanctify us|enter our hearts|hear us)\.?)$/;
+
+function prayerHTML(key) {
+  if (key === "rosary") return rosaryHTML();
+  const text = PRAYERS[key] || "";
+  const hymn = HYMNS.has(key);
+  const stanzas = text.split(/\n\n+/).map(st => {
+    const lines = st.split("\n").map(l => {
+      let m;
+      if ((m = l.match(/^([VR])\.\s*(.*)$/))) return `<span class="ln"><span class="vr">${m[1] === "V" ? "℣" : "℟"}</span>${esc(m[2])}</span>`;
+      if (!hymn && (m = l.match(RESP)) && m[1].length > 2) return `<span class="ln">${esc(m[1])}<span class="resp">${esc(m[2])}</span></span>`;
+      return `<span class="ln">${esc(l)}</span>`;
+    }).join("");
+    return `<p class="st">${lines}</p>`;
+  }).join("");
+  return `<div class="prayer${hymn ? " hymn" : ""}">${stanzas}</div>`;
+}
+
+function rosaryHTML(now) {
+  const wd = new Date((now == null ? Date.now() : now)).getDay();
+  const set = MYSTERY_BY_WEEKDAY[wd];
+  const dayName = new Date().toLocaleDateString(undefined, { weekday: "long" });
+  return `<div class="prayer">
+    <p class="st note">Your PDF lists the Rosary for the second week but doesn’t print it, so the usual form is added here.</p>
+    <h4>Today (${esc(dayName)}): the ${set} Mysteries</h4>
+    <ol>${MYSTERIES[set].map(m => `<li>${esc(m)}</li>`).join("")}</ol>
+    <p class="st note">Mondays and Saturdays: Joyful. Tuesdays and Fridays: Sorrowful. Wednesdays and Sundays: Glorious. Thursdays: Luminous.</p>
+    <h4>Each decade</h4>
+    <p class="st">Announce the mystery, then pray one Our Father, ten Hail Marys, and one Glory Be.</p>
+    <h4>Our Father</h4>
+    <p class="st">Our Father, Who art in heaven, hallowed be Thy name; Thy kingdom come; Thy will be done on earth as it is in heaven. Give us this day our daily bread; and forgive us our trespasses as we forgive those who trespass against us; and lead us not into temptation, but deliver us from evil. Amen.</p>
+    <h4>Hail Mary</h4>
+    <p class="st">Hail Mary, full of grace, the Lord is with thee; blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.</p>
+    <h4>Glory Be</h4>
+    ${prayerHTML("glory")}
+    <h4>Hail, Holy Queen (to close)</h4>
+    <p class="st">Hail, holy Queen, Mother of mercy, our life, our sweetness and our hope. To thee do we cry, poor banished children of Eve; to thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us; and after this our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary.</p>
+  </div>`;
+}
+
+/* ---------- views ---------- */
+function blocksHTML(d) {
+  return d.blocks.map(b => b.t === "p" ? `<p>${esc(b.x)}</p>` : `<div class="${b.t}">${esc(b.x)}</div>`).join("");
+}
+
+function viewDay(n, isTodayView) {
+  const c = cycle();
+  const p = periodOf(n);
+  const d = DAYS[n - 1];
+  const isToday = n === c.day;
+  const daysLeft = Math.round((c.feast - todayUTC()) / MS);
+  const said = state.said[n] || [];
+  const done = !!state.done[n];
+
+  let lead = esc(p.label);
+  let sub = `${esc(p.focus)}<br>` + fmt(dateOfDay(n), { weekday: "long", day: "numeric", month: "long" });
+  if (isToday && daysLeft > 0) sub += `<br>${daysLeft} day${daysLeft === 1 ? "" : "s"} to ${esc(c.f.name)}`;
+  if (isTodayView && c.day < 1) sub = `Your preparation begins ${fmt(c.start, { weekday: "long", day: "numeric", month: "long" })}`;
+
+  const plist = p.prayers.map(k => {
+    const on = said.includes(k);
+    return `<div class="pitem" data-key="${k}" data-said="${on}">
+      <button class="pname" type="button" data-act="toggle" aria-expanded="false"><span>${esc(PRAYER_NAMES[k])}</span><span class="ico">${on ? "prayed ✓" : ""}</span></button>
+      <div class="pbody">${prayerHTML(k)}
+        <button class="amen" type="button" data-act="said" data-day="${n}" data-key="${k}">${on ? "Mark as not prayed" : "Amen · mark as prayed"}</button>
+      </div>
+    </div>`;
+  }).join("");
+
+  const prev = n > 1 ? `#day-${n - 1}` : "#";
+  const next = n < 33 ? `#day-${n + 1}` : "#consecration";
+
+  return `
+    <header class="head">
+      <div class="kicker sc">${lead}</div>
+      <h1>Day ${n}${done ? ` <span class="red" aria-label="done">✓</span>` : ""}</h1>
+      <div class="rule"></div>
+      <p>${sub}</p>
+    </header>
+    <section class="reading">${blocksHTML(d)}</section>
+    <h2 class="sc">Prayers</h2>
+    <div class="plist">${plist}</div>
+    <button class="mark${done ? " isdone" : ""}" type="button" data-act="done" data-day="${n}">${done ? "Day " + n + " complete · undo" : "Mark day complete"}</button>
+    <nav class="pager" aria-label="Other days">
+      <a href="${prev}" aria-disabled="${n === 1}">‹ Day ${n - 1}</a>
+      <a href="${next}">${n < 33 ? "Day " + (n + 1) : "Consecration"} ›</a>
+    </nav>`;
+}
+
+function viewToday() {
+  const c = cycle();
+  if (c.day >= 1 && c.day <= 33) return viewDay(c.day, true);
+  if (c.day === 34) return viewCons(true);
+  return viewDay(1, true);
+}
+
+function shortSrc(d) {
+  return d.blocks.filter(b => b.t === "src").map(b => b.x.replace(/^From /, "").replace(/, by Thomas á Kempis/, "").replace(/ To the Blessed Virgin Mary| to the Blessed Virgin Mary/i, "")).join("; ");
+}
+
+function viewDays() {
+  const c = cycle();
+  const doneCount = Object.keys(state.done).filter(k => state.done[k] && +k <= 33).length;
+  const sections = PERIODS.map(p => {
+    let rows = "";
+    for (let n = p.from; n <= p.to; n++) {
+      const st = state.done[n] ? "✓" : n === c.day ? "today" : "";
+      rows += `<a class="drow" href="#day-${n}">
+        <span class="num">${n}</span>
+        <span class="info">${fmt(dateOfDay(n), { weekday: "short", day: "numeric", month: "short" })}<span>${esc(shortSrc(DAYS[n - 1]))}</span></span>
+        <span class="state">${st}</span></a>`;
+    }
+    return `<h2 class="sc">${esc(p.label)}</h2><p class="period-note">${esc(p.focus)}</p><div class="dlist">${rows}</div>`;
+  }).join("");
+  return `
+    <header class="head">
+      <div class="kicker sc">${doneCount} of 33 complete</div>
+      <h1>Thirty-Three Days</h1>
+      <div class="rule"></div>
+      <p>${fmt(c.start, { day: "numeric", month: "long" })} to ${fmt(c.feast - MS, { day: "numeric", month: "long" })}</p>
+    </header>
+    ${sections}
+    <h2 class="sc">Day 34</h2>
+    <div class="dlist"><a class="drow" href="#consecration"><span class="num">34</span><span class="info">${fmt(c.feast, { weekday: "short", day: "numeric", month: "short" })}<span>Consecration, ${esc(c.f.name)}</span></span><span class="state">${c.day === 34 ? "today" : ""}</span></a></div>`;
+}
+
+function viewPrayers() {
+  const used = k => PERIODS.filter(p => p.prayers.includes(k)).map(p => p.id === "prep" ? "days 1–12" : p.label.replace(" Week", " week").toLowerCase()).join(", ");
+  return `
+    <header class="head">
+      <div class="kicker sc">Appendix</div>
+      <h1>Prayers</h1>
+      <div class="rule"></div>
+      <p>Recited throughout the consecration</p>
+    </header>
+    <div class="plinks">${PRAYER_ORDER.map(k => `<a href="#prayer-${k}">${esc(PRAYER_NAMES[k])}<span>${esc(used(k))}</span></a>`).join("")}
+      <a href="#consecration">Act of Consecration<span>day 34</span></a></div>`;
+}
+
+function viewPrayer(k) {
+  if (!PRAYER_NAMES[k]) return viewPrayers();
+  return `
+    <a class="back" href="#prayers">‹ Prayers</a>
+    <header class="head">
+      <h1>${esc(PRAYER_NAMES[k])}</h1>
+      <div class="rule"></div>
+    </header>
+    ${prayerHTML(k)}`;
+}
+
+function actHTML() {
+  const name = state.name.trim();
+  return CONS.slice(4, 11).map(p => {
+    let h = esc(p);
+    h = h.replace(/N_+/, name ? `<span class="nm">${esc(name)}</span>` : "N.");
+    return `<p>${h}</p>`;
+  }).join("");
+}
+
+function viewCons(isTodayView) {
+  const c = cycle();
+  const instr = CONS.slice(0, 4).map(p => `<p>${esc(p)}</p>`).join("");
+  const after = CONS.slice(15, 24).map(p => `<li>${esc(p.replace(/^•\s*/, ""))}</li>`).join("");
+  return `
+    <header class="head">
+      <div class="kicker sc">Day 34${isTodayView ? " · today" : ""}</div>
+      <h1>Day of Consecration</h1>
+      <div class="rule"></div>
+      <p>${esc(cap(c.f.name))}, ${fmt(c.feast, { weekday: "long", day: "numeric", month: "long" })}</p>
+    </header>
+    <section class="prose">${instr}</section>
+    <h2 class="sc">Act of Consecration</h2>
+    <label class="field" for="nm"><span>Your name, for “I, N.”</span>
+      <input id="nm" type="text" autocomplete="name" value="${esc(state.name)}">
+    </label>
+    <section class="act" id="act">${actHTML()}</section>
+    <div class="sign"><div>Sign your name here.</div><div>Date</div></div>
+    <h2 class="sc">After Consecration</h2>
+    <section class="prose"><p>${esc(CONS[14])}</p><ul>${after}</ul><p class="soft it">${esc(CONS[24])}</p></section>`;
+}
+
+function viewSetup() {
+  const c = cycle();
+  const opts = FEASTS.map(f => `<option value="${f.k}"${f.k === state.feast ? " selected" : ""}>${esc(cap(f.name))}, ${fmt(Date.UTC(2001, f.m - 1, f.d), { day: "numeric", month: "long" })}</option>`).join("");
+  const sizes = [[0.9, "Small"], [1, "Normal"], [1.15, "Large"], [1.3, "Larger"]];
+  return `
+    <header class="head">
+      <div class="kicker sc">Setup</div>
+      <h1>Feast and Settings</h1>
+      <div class="rule"></div>
+    </header>
+    <label class="field" for="feast"><span>Feast of consecration</span>
+      <select id="feast">${opts}</select>
+    </label>
+    <p class="soft it">Day 1 is ${fmt(c.start, { weekday: "long", day: "numeric", month: "long" })}; the consecration is ${fmt(c.feast, { weekday: "long", day: "numeric", month: "long" })}. St. Louis de Montfort recommends the Annunciation most of all.</p>
+    <h2 class="sc">Appearance</h2>
+    <div class="seg">${[["auto", "Automatic"], ["light", "Light"], ["dark", "Dark"]].map(([v, l]) => `<button type="button" data-act="mode" data-v="${v}" aria-pressed="${state.mode === v}">${l}</button>`).join("")}</div>
+    <p class="soft it" style="text-align:center;font-size:.86em;margin:.6em 0 0">Automatic follows your phone’s setting.</p>
+    <h2 class="sc">Text size</h2>
+    <div class="seg">${sizes.map(([v, l]) => `<button type="button" data-act="scale" data-v="${v}" aria-pressed="${state.scale == v}">${l}</button>`).join("")}</div>
+    <h2 class="sc">The Thirty-Three Days</h2>
+    <section class="prose">
+      <p>First come twelve days of preparation, emptying oneself of the spirit of the world, with the Veni Creator, Ave Maris Stella, Magnificat and Glory Be.</p>
+      <p>Then three weeks, each with its own prayers: knowledge of self, knowledge of the Blessed Virgin, and knowledge of Jesus Christ. The following day, the feast itself, is the consecration.</p>
+      <p class="it">Don’t just read the readings, internalize them; don’t let your lips just mouth the prayers, truly pray them.</p>
+    </section>
+    <h2 class="sc">Progress</h2>
+    <p class="soft it" style="text-align:center">Check marks are kept on this phone only. <button class="textbtn" type="button" data-act="reset">Clear them</button></p>`;
+}
+
+/* ---------- router ---------- */
+const app = document.getElementById("app");
+function route() {
+  const h = (location.hash || "#today").slice(1);
+  let html, tab = "today";
+  let m;
+  if ((m = h.match(/^day-(\d+)$/)) && +m[1] >= 1 && +m[1] <= 33) { html = viewDay(+m[1], false); tab = +m[1] === cycle().day ? "today" : "days"; }
+  else if (h === "days") { html = viewDays(); tab = "days"; }
+  else if (h === "prayers") { html = viewPrayers(); tab = "prayers"; }
+  else if ((m = h.match(/^prayer-([a-z-]+)$/))) { html = viewPrayer(m[1]); tab = "prayers"; }
+  else if (h === "consecration") { html = viewCons(cycle().day === 34); tab = "consecration"; }
+  else if (h === "setup") { html = viewSetup(); tab = "setup"; }
+  else { html = viewToday(); tab = "today"; }
+  app.innerHTML = html;
+  document.querySelectorAll("nav.tabs a").forEach(a => { if (a.dataset.tab === tab) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  bind();
+}
+function rerender(keepScroll) { const y = window.scrollY; route(); if (keepScroll) window.scrollTo(0, y); }
+
+function applyMode() {
+  const root = document.documentElement;
+  if (state.mode === "light" || state.mode === "dark") root.setAttribute("data-mode", state.mode); else root.removeAttribute("data-mode");
+}
+function applyScale() { document.documentElement.style.setProperty("--scale", state.scale); }
+
+function bind() {
+  const feast = document.getElementById("feast");
+  if (feast) feast.addEventListener("change", e => { state.feast = e.target.value; save(); rerender(true); });
+  const nm = document.getElementById("nm");
+  if (nm) nm.addEventListener("input", e => { state.name = e.target.value; save(); document.getElementById("act").innerHTML = actHTML(); });
+}
+
+app.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]");
+  if (!b) return;
+  const act = b.dataset.act;
+  if (act === "toggle") {
+    const item = b.closest(".pitem");
+    const open = item.classList.toggle("open");
+    b.setAttribute("aria-expanded", open);
+  } else if (act === "said") {
+    const n = b.dataset.day, k = b.dataset.key;
+    const list = state.said[n] || (state.said[n] = []);
+    const i = list.indexOf(k);
+    if (i >= 0) list.splice(i, 1); else list.push(k);
+    const on = i < 0;
+    const item = b.closest(".pitem");
+    item.dataset.said = on;
+    item.querySelector(".ico").textContent = on ? "prayed ✓" : "";
+    b.textContent = on ? "Mark as not prayed" : "Amen · mark as prayed";
+    const p = periodOf(+n);
+    if (on) {
+      item.classList.remove("open");
+      item.querySelector(".pname").setAttribute("aria-expanded", "false");
+      if (p.prayers.every(x => list.includes(x)) && !state.done[n]) { state.done[n] = true; save(); rerender(true); return; }
+      const next = [...document.querySelectorAll(".pitem")].find(x => x.dataset.said !== "true");
+      if (next) {
+        next.classList.add("open");
+        next.querySelector(".pname").setAttribute("aria-expanded", "true");
+        const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        next.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "start" });
+      } else {
+        item.scrollIntoView({ block: "nearest" });
+      }
+    }
+    save();
+  } else if (act === "done") {
+    const n = b.dataset.day;
+    if (state.done[n]) delete state.done[n]; else state.done[n] = true;
+    save(); rerender(true);
+  } else if (act === "mode") {
+    state.mode = b.dataset.v; save(); applyMode(); rerender(true);
+  } else if (act === "scale") {
+    state.scale = +b.dataset.v; save(); applyScale(); rerender(true);
+  } else if (act === "reset") {
+    if (b.dataset.confirm) { state.done = {}; state.said = {}; save(); rerender(true); }
+    else { b.dataset.confirm = "1"; b.textContent = "tap again to confirm"; }
+  }
+});
+
+window.addEventListener("hashchange", () => { route(); window.scrollTo(0, 0); });
+applyScale();
+applyMode();
+route();
+// roll over to the next day if the app is left open past midnight
+let lastDay = todayUTC();
+setInterval(() => { if (todayUTC() !== lastDay) { lastDay = todayUTC(); rerender(true); } }, 60000);
+/* ---------- install + first-launch screens (only on the real website, never inside Claude) ---------- */
+const FLAGS_KEY = "montfort-consecration-flags";
+let flags = {};
+try { flags = JSON.parse(localStorage.getItem(FLAGS_KEY) || "{}") || {}; } catch (e) {}
+function saveFlags() { try { localStorage.setItem(FLAGS_KEY, JSON.stringify(flags)); } catch (e) {} }
+
+const inFrame = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+const UA = navigator.userAgent;
+const isIOS = /iPhone|iPad|iPod/.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const isAndroid = /Android/.test(UA);
+const inAppBrowser = /FBAN|FBAV|Instagram|Line\/|Snapchat|TikTok|musical_ly|LinkedInApp|GSA\//.test(UA);
+let installEvent = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvent = e; if (!document.getElementById("onboard").hidden) showInstall(); });
+
+const SHARE_ICON = '<svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-label="Share button"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11v9h12v-9"/></svg>';
+const onboard = document.getElementById("onboard");
+
+function shell(inner) {
+  onboard.innerHTML = `<div class="ob">
+    <img class="ob-icon" src="apple-touch-icon.png" alt="" width="84" height="84">
+    <h1>Total Consecration</h1>
+    <p class="ob-sub">St. Louis de Montfort’s 33-day preparation</p>
+    ${inner}
+  </div>`;
+  onboard.hidden = false;
+  document.body.classList.add("ob-open");
+}
+function closeOnboard() { onboard.hidden = true; onboard.innerHTML = ""; document.body.classList.remove("ob-open"); }
+
+function showInstall() {
+  let steps;
+  if (inAppBrowser) {
+    steps = `<p class="ob-lead">Open this page in your browser first</p>
+      <ol class="ob-steps">
+        <li>Tap the <b>•••</b> or share button in this app’s corner.</li>
+        <li>Choose <b>Open in Safari</b> (or <b>Open in browser</b> on Android).</li>
+        <li>Then follow the steps to add it to your home screen.</li>
+      </ol>`;
+  } else if (isIOS) {
+    steps = `<p class="ob-lead">Add it to your home screen</p>
+      <ol class="ob-steps">
+        <li>Tap the Share button ${SHARE_ICON} in Safari. On newer iPhones, tap <b>•••</b> first, then <b>Share</b>.</li>
+        <li>Scroll down and tap <b>Add to Home Screen</b>.</li>
+        <li>Tap <b>Add</b>. If you see <b>Open as Web App</b>, leave it on.</li>
+        <li>Open <b>Consecration</b> from your home screen from now on.</li>
+      </ol>`;
+  } else if (isAndroid) {
+    steps = installEvent
+      ? `<p class="ob-lead">Add it to your home screen</p><button class="ob-btn" type="button" id="ob-install">Install app</button>`
+      : `<p class="ob-lead">Add it to your home screen</p>
+        <ol class="ob-steps">
+          <li>Tap the <b>⋮</b> menu in Chrome.</li>
+          <li>Tap <b>Add to Home screen</b> or <b>Install app</b>.</li>
+          <li>Open <b>Consecration</b> from your home screen from now on.</li>
+        </ol>`;
+  } else {
+    steps = `<p class="ob-lead">Made for your phone</p>
+      <p class="ob-text">Open this link on your phone to add it to your home screen. You can also read it here.</p>
+      ${installEvent ? `<button class="ob-btn" type="button" id="ob-install">Install on this computer</button>` : ""}`;
+  }
+  shell(`${steps}
+    <p class="ob-note">Your check marks are saved in whichever one you use, so stick to the home screen app.</p>
+    <button class="ob-skip" type="button" id="ob-skip">Continue in browser</button>`);
+  document.getElementById("ob-skip").onclick = () => { flags.installSkipped = true; saveFlags(); closeOnboard(); };
+  const ib = document.getElementById("ob-install");
+  if (ib) ib.onclick = async () => {
+    if (!installEvent) return;
+    installEvent.prompt();
+    try { await installEvent.userChoice; } catch (e) {}
+    installEvent = null;
+    flags.installSkipped = true; saveFlags(); closeOnboard();
+  };
+}
+
+function showWelcome() {
+  const c = cycle();
+  const modes = [["auto", "Automatic"], ["light", "Light"], ["dark", "Dark"]];
+  shell(`<p class="ob-lead">Welcome</p>
+    <ul class="ob-list">
+      <li>It opens to <b>today’s day</b> on its own, counting toward ${esc(c.f.name)}, ${fmt(c.feast, { month: "long", day: "numeric" })}.</li>
+      <li>Read the day’s reading, then <b>tap each prayer</b> to open it.</li>
+      <li>Tap <b>Amen</b> at the end of a prayer to mark it prayed.</li>
+      <li><b>Setup</b> lets you change the feast and the text size.</li>
+    </ul>
+    <p class="ob-lead small">Appearance</p>
+    <div class="seg" id="ob-mode">${modes.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${state.mode === v}">${l}</button>`).join("")}</div>
+    <button class="ob-btn" type="button" id="ob-begin">Begin</button>`);
+  document.getElementById("ob-mode").onclick = e => {
+    const b = e.target.closest("button[data-v]"); if (!b) return;
+    state.mode = b.dataset.v; save(); applyMode();
+    document.querySelectorAll("#ob-mode button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  };
+  document.getElementById("ob-begin").onclick = () => { flags.welcomed = true; saveFlags(); closeOnboard(); };
+}
+
+if (!inFrame) {
+  if (isStandalone) { if (!flags.welcomed) showWelcome(); }
+  else if (!flags.installSkipped) showInstall();
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+  }
+}
+</script>
+</body>
+</html>
