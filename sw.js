@@ -1,6 +1,6 @@
 // Keeps the app working offline. The page itself is fetched fresh when online,
 // so updates show up right away; the saved copy is used only without a connection.
-const CACHE = "consecration-v1";
+const CACHE = "consecration-v2";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./favicon.png"];
 
 self.addEventListener("install", e => {

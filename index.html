@@ -140,7 +140,7 @@ h2 { font-weight: 400; color: var(--red); font-size: .9em; margin: 2.4em 0 .8em;
 .drow .num { color: var(--red); text-align: right; }
 .drow .info { min-width: 0; }
 .drow .info span { display: block; font-style: italic; color: var(--soft); font-size: .86em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.drow .state { font-size: .86em; font-style: italic; color: var(--red); }
+.drow .state { font-size: .86em; font-style: italic; color: var(--red); padding-right: .2em; }
 .period-note { text-align: center; font-style: italic; color: var(--soft); margin: -.5em 0 1em; font-size: .92em; }
 
 .plinks { border-top: 1px solid var(--rule); }
@@ -195,6 +195,8 @@ body.ob-open { overflow: hidden; }
 .ob-note { margin: 2em 0 0; color: var(--soft); font-style: italic; font-size: .86em; }
 .ob-btn { margin-top: 2em; background: var(--red); color: var(--paper); border: 0; border-radius: 4px; padding: .6em 2.4em; font-size: 1em; cursor: pointer; font-variant: small-caps; letter-spacing: .08em; text-transform: lowercase; }
 .ob-skip { margin-top: auto; padding-top: 2.4em; background: none; border: 0; color: var(--soft); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; font-size: .92em; }
+.ck { width: .8em; height: .8em; vertical-align: -.02em; overflow: hidden; }
+.ck-big .ck { width: .62em; height: .62em; vertical-align: .02em; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -309,6 +311,7 @@ function periodOf(n) { return PERIODS.find(p => n >= p.from && n <= p.to); }
 
 /* ---------- helpers ---------- */
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+const CK = '<svg class="ck" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.8 8.6l3.4 3.3L13.2 4.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const CHEV = '<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
@@ -374,7 +377,7 @@ function viewDay(n, isTodayView) {
   const plist = p.prayers.map(k => {
     const on = said.includes(k);
     return `<div class="pitem" data-key="${k}" data-said="${on}">
-      <button class="pname" type="button" data-act="toggle" aria-expanded="false"><span>${esc(PRAYER_NAMES[k])}</span><span class="ico">${on ? "prayed ✓" : ""}</span></button>
+      <button class="pname" type="button" data-act="toggle" aria-expanded="false"><span>${esc(PRAYER_NAMES[k])}</span><span class="ico">${on ? "prayed " + CK : ""}</span></button>
       <div class="pbody">${prayerHTML(k)}
         <button class="amen" type="button" data-act="said" data-day="${n}" data-key="${k}">${on ? "Mark as not prayed" : "Amen · mark as prayed"}</button>
       </div>
@@ -387,7 +390,7 @@ function viewDay(n, isTodayView) {
   return `
     <header class="head">
       <div class="kicker sc">${lead}</div>
-      <h1>Day ${n}${done ? ` <span class="red" aria-label="done">✓</span>` : ""}</h1>
+      <h1>Day ${n}${done ? ` <span class="red ck-big" aria-label="done">${CK}</span>` : ""}</h1>
       <div class="rule"></div>
       <p>${sub}</p>
     </header>
@@ -418,7 +421,7 @@ function viewDays() {
   const sections = PERIODS.map(p => {
     let rows = "";
     for (let n = p.from; n <= p.to; n++) {
-      const st = state.done[n] ? "✓" : n === c.day ? "today" : "";
+      const st = state.done[n] ? `<span aria-label="done">${CK}</span>` : n === c.day ? "today" : "";
       rows += `<a class="drow" href="#day-${n}">
         <span class="num">${n}</span>
         <span class="info">${fmt(dateOfDay(n), { weekday: "short", day: "numeric", month: "short" })}<span>${esc(shortSrc(DAYS[n - 1]))}</span></span>
@@ -570,7 +573,7 @@ app.addEventListener("click", e => {
     const on = i < 0;
     const item = b.closest(".pitem");
     item.dataset.said = on;
-    item.querySelector(".ico").textContent = on ? "prayed ✓" : "";
+    item.querySelector(".ico").innerHTML = on ? "prayed " + CK : "";
     b.textContent = on ? "Mark as not prayed" : "Amen · mark as prayed";
     const p = periodOf(+n);
     if (on) {
