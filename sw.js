@@ -1,6 +1,6 @@
 // Keeps the app working offline. The page itself is fetched fresh when online,
 // so updates show up right away; the saved copy is used only without a connection.
-const CACHE = "consecration-v3";
+const CACHE = "consecration-v4";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./favicon.png"];
 
 self.addEventListener("install", e => {
@@ -19,7 +19,7 @@ self.addEventListener("fetch", e => {
   // The page: network first, saved copy when offline
   if (req.mode === "navigate" || (url.origin === location.origin && url.pathname.endsWith(".html"))) {
     e.respondWith(
-      fetch(req).then(res => {
+      fetch(req, { cache: "no-cache" }).then(res => {
         const copy = res.clone();
         caches.open(CACHE).then(c => c.put("./index.html", copy));
         return res;
