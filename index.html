@@ -197,6 +197,18 @@ body.ob-open { overflow: hidden; }
 .ob-skip { margin-top: auto; padding-top: 2.4em; background: none; border: 0; color: var(--soft); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; font-size: .92em; }
 .ck { width: .8em; height: .8em; vertical-align: -.02em; overflow: hidden; }
 .ck-big .ck { width: .62em; height: .62em; vertical-align: .02em; }
+.missed { display: flex; align-items: center; gap: .8em; background: var(--red); color: var(--paper); text-decoration: none; border-radius: 6px; padding: .7em .9em; margin: 0 0 2.2em; }
+.missed .mt { flex: 1; }
+.missed b { display: block; font-weight: 500; }
+.missed .mt span { display: block; font-style: italic; font-size: .86em; color: color-mix(in srgb, var(--paper) 82%, var(--red)); }
+.missed .ar { font-size: 1.5em; line-height: 1; }
+.catchup { text-align: center; color: var(--red); font-style: italic; font-size: .92em; margin: -1.2em 0 2em; }
+.mrow { display: grid; grid-template-columns: 2.2em minmax(0, 1fr) auto; gap: .8em; align-items: baseline; padding: .55em 0; border-bottom: 1px solid var(--rule); }
+.mrow .num { color: var(--red); text-align: right; }
+.mrow .info span { display: block; font-style: italic; color: var(--soft); font-size: .86em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mrow .acts { display: flex; gap: .9em; font-size: .9em; }
+.mrow .acts a, .mrow .acts button { background: none; border: 0; padding: 0; font: inherit; color: var(--red); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.mrow .acts button { color: var(--soft); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -360,6 +372,48 @@ function blocksHTML(d) {
   return d.blocks.map(b => b.t === "p" ? `<p>${esc(b.x)}</p>` : `<div class="${b.t}">${esc(b.x)}</div>`).join("");
 }
 
+function missedDays() {
+  const c = cycle();
+  const out = [];
+  for (let n = 1; n <= Math.min(c.day - 1, 33); n++) if (!state.done[n]) out.push(n);
+  return out;
+}
+function joinDays(a) {
+  if (a.length === 1) return String(a[0]);
+  if (a.length === 2) return a[0] + " and " + a[1];
+  return a.slice(0, -1).join(", ") + " and " + a[a.length - 1];
+}
+function missedBanner() {
+  const m = missedDays();
+  if (!m.length) return "";
+  return `<a class="missed" href="#missed"><span class="mt"><b>${m.length === 1 ? "Missed day" : "Missed days"}: ${joinDays(m)}</b><span>Catch up before today’s reading</span></span><span class="ar" aria-hidden="true">›</span></a>`;
+}
+// After finishing an earlier day, go on to the next missed day, or back to today.
+function afterDayDone(n) {
+  if (n >= cycle().day) return false;
+  const m = missedDays();
+  location.hash = m.length ? `day-${m[0]}` : "today";
+  return true;
+}
+
+function viewMissed() {
+  const m = missedDays();
+  const rows = m.map(n => `<div class="mrow">
+      <span class="num">${n}</span>
+      <span class="info">${fmt(dateOfDay(n), { weekday: "short", day: "numeric", month: "short" })}<span>${esc(shortSrc(DAYS[n - 1]))}</span></span>
+      <span class="acts"><a href="#day-${n}">Open</a><button type="button" data-act="already" data-day="${n}">Already done</button></span>
+    </div>`).join("");
+  return `
+    <a class="back" href="#today">‹ Today</a>
+    <header class="head">
+      <div class="kicker sc">Catch up</div>
+      <h1>Missed Days</h1>
+      <div class="rule"></div>
+      <p>${m.length ? "Open a day to pray it, or mark it if you already did" : "You’re all caught up"}</p>
+    </header>
+    ${m.length ? `<div class="dlist">${rows}</div>` : `<p style="text-align:center"><a class="red" href="#today">Go to today</a></p>`}`;
+}
+
 function viewDay(n, isTodayView) {
   const c = cycle();
   const p = periodOf(n);
@@ -384,16 +438,24 @@ function viewDay(n, isTodayView) {
     </div>`;
   }).join("");
 
+  let catchup = "";
+  if (n < c.day && !done) {
+    const rest = missedDays().filter(x => x !== n);
+    catchup = `<p class="catchup">Missed day. When you finish it, you’ll go on to ${rest.length ? "Day " + rest[0] : "today"}.</p>`;
+  }
+
   const prev = n > 1 ? `#day-${n - 1}` : "#";
   const next = n < 33 ? `#day-${n + 1}` : "#consecration";
 
   return `
+    ${isTodayView && c.day >= 1 ? missedBanner() : ""}
     <header class="head">
       <div class="kicker sc">${lead}</div>
       <h1>Day ${n}${done ? ` <span class="red ck-big" aria-label="done">${CK}</span>` : ""}</h1>
       <div class="rule"></div>
       <p>${sub}</p>
     </header>
+    ${catchup}
     <section class="reading">${blocksHTML(d)}</section>
     <h2 class="sc">Prayers</h2>
     <div class="plist">${plist}</div>
@@ -479,6 +541,7 @@ function viewCons(isTodayView) {
   const instr = CONS.slice(0, 4).map(p => `<p>${esc(p)}</p>`).join("");
   const after = CONS.slice(15, 24).map(p => `<li>${esc(p.replace(/^•\s*/, ""))}</li>`).join("");
   return `
+    ${isTodayView ? missedBanner() : ""}
     <header class="head">
       <div class="kicker sc">Day 34${isTodayView ? " · today" : ""}</div>
       <h1>Day of Consecration</h1>
@@ -533,6 +596,7 @@ function route() {
   let m;
   if ((m = h.match(/^day-(\d+)$/)) && +m[1] >= 1 && +m[1] <= 33) { html = viewDay(+m[1], false); tab = +m[1] === cycle().day ? "today" : "days"; }
   else if (h === "days") { html = viewDays(); tab = "days"; }
+  else if (h === "missed") { html = viewMissed(); tab = "today"; }
   else if (h === "prayers") { html = viewPrayers(); tab = "prayers"; }
   else if ((m = h.match(/^prayer-([a-z-]+)$/))) { html = viewPrayer(m[1]); tab = "prayers"; }
   else if (h === "consecration") { html = viewCons(cycle().day === 34); tab = "consecration"; }
@@ -579,7 +643,7 @@ app.addEventListener("click", e => {
     if (on) {
       item.classList.remove("open");
       item.querySelector(".pname").setAttribute("aria-expanded", "false");
-      if (p.prayers.every(x => list.includes(x)) && !state.done[n]) { state.done[n] = true; save(); rerender(true); return; }
+      if (p.prayers.every(x => list.includes(x)) && !state.done[n]) { state.done[n] = true; save(); if (!afterDayDone(+n)) rerender(true); return; }
       const next = [...document.querySelectorAll(".pitem")].find(x => x.dataset.said !== "true");
       if (next) {
         next.classList.add("open");
@@ -593,8 +657,11 @@ app.addEventListener("click", e => {
     save();
   } else if (act === "done") {
     const n = b.dataset.day;
-    if (state.done[n]) delete state.done[n]; else state.done[n] = true;
-    save(); rerender(true);
+    if (state.done[n]) { delete state.done[n]; save(); rerender(true); }
+    else { state.done[n] = true; save(); if (!afterDayDone(+n)) rerender(true); }
+  } else if (act === "already") {
+    state.done[b.dataset.day] = true; save();
+    if (missedDays().length) rerender(true); else location.hash = "today";
   } else if (act === "mode") {
     state.mode = b.dataset.v; save(); applyMode(); rerender(true);
   } else if (act === "scale") {
